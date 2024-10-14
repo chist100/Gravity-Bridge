@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	math "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -93,7 +94,7 @@ func createAttestations(t *testing.T, length int, k Keeper, ctx sdktypes.Context
 			EventNonce:     nonce,
 			EthBlockHeight: 1,
 			TokenContract:  contract,
-			Amount:         sdktypes.NewInt(10000000000 + int64(i)),
+			Amount:         math.NewInt(10000000000 + int64(i)),
 			EthereumSender: sender,
 			CosmosReceiver: receiver,
 			Orchestrator:   orch,
@@ -162,7 +163,7 @@ func TestGetSetLastObservedValset(t *testing.T) {
 				EthereumAddress: "0x0000000000000003",
 			},
 		},
-		RewardAmount: sdktypes.NewInt(1000000000),
+		RewardAmount: math.NewInt(1000000000),
 		RewardToken:  "footoken",
 	}
 
@@ -226,11 +227,11 @@ func TestInvalidHeight(t *testing.T) {
 			DestAddress: receiver.String(),
 			Erc20Token: types.ERC20Token{
 				Contract: tokenContract,
-				Amount:   sdktypes.NewInt(1),
+				Amount:   math.NewInt(1),
 			},
 			Erc20Fee: types.ERC20Token{
 				Contract: tokenContract,
-				Amount:   sdktypes.NewInt(1),
+				Amount:   math.NewInt(1),
 			},
 		}},
 		TokenContract:      tokenContract,

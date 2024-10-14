@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ import (
 
 // Creates auctions in the store and tests the auction storage and query functions
 func (suite *KeeperTestSuite) TestAuctionStorage() {
-	accounts := suite.AppTestHelper.CreateAndFundRandomAccounts(5, sdk.NewCoins(sdk.NewCoin("Hello", sdk.NewInt(1))))
+	accounts := suite.AppTestHelper.CreateAndFundRandomAccounts(5, sdk.NewCoins(sdk.NewCoin("Hello", math.NewInt(1))))
 	t := suite.T()
 	ctx := suite.Ctx
 	ak := suite.App.AuctionKeeper
@@ -23,7 +24,7 @@ func (suite *KeeperTestSuite) TestAuctionStorage() {
 	ak.DeleteAllAuctions(ctx)
 
 	// Create and store multiple Auctions
-	auction := types.NewAuction(1, sdk.NewCoin("test", sdk.OneInt()))
+	auction := types.NewAuction(1, sdk.NewCoin("test", math.OneInt()))
 	err := ak.StoreAuction(ctx, auction)
 	require.NoError(t, err)
 	stored := ak.GetAllAuctions(ctx)
@@ -34,7 +35,7 @@ func (suite *KeeperTestSuite) TestAuctionStorage() {
 	for i := 1; i < 30; i++ {
 		random, err := rand.Int(rand.Reader, (&big.Int{}).Exp(big.NewInt(2), big.NewInt(256), nil))
 		require.NoError(t, err)
-		auction := types.NewAuction(uint64(i+1), sdk.NewCoin(fmt.Sprintf("test%d", i+2), sdk.NewIntFromBigInt(random)))
+		auction := types.NewAuction(uint64(i+1), sdk.NewCoin(fmt.Sprintf("test%d", i+2), math.NewIntFromBigInt(random)))
 		err = ak.StoreAuction(ctx, auction)
 		require.NoError(t, err)
 	}
@@ -122,7 +123,7 @@ func (suite *KeeperTestSuite) TestAuctionStorage() {
 
 // Tests the auction functions when there are no auctions
 func (suite *KeeperTestSuite) TestEmptyAuctionFunctions() {
-	accounts := suite.AppTestHelper.CreateAndFundRandomAccounts(5, sdk.NewCoins(sdk.NewCoin("Hello", sdk.NewInt(1))))
+	accounts := suite.AppTestHelper.CreateAndFundRandomAccounts(5, sdk.NewCoins(sdk.NewCoin("Hello", math.NewInt(1))))
 	ctx := suite.Ctx
 	ak := suite.App.AuctionKeeper
 	initialPeriod := ak.GetAuctionPeriod(ctx)

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -55,16 +56,16 @@ func (suite *KeeperTestSuite) TestSendRemoveAuctionPool() {
 	ak := suite.App.AuctionKeeper
 
 	testCoins := sdk.NewCoins(
-		sdk.NewCoin("test1", sdk.NewInt(1000_000000)),
-		sdk.NewCoin("test2", sdk.NewInt(2000_000000)),
-		sdk.NewCoin("test3", sdk.NewInt(3000_000000)),
-		sdk.NewCoin("test4", sdk.NewInt(4000_000000)),
+		sdk.NewCoin("test1", math.NewInt(1000_000000)),
+		sdk.NewCoin("test2", math.NewInt(2000_000000)),
+		sdk.NewCoin("test3", math.NewInt(3000_000000)),
+		sdk.NewCoin("test4", math.NewInt(4000_000000)),
 	)
 	suite.FundAuctionPool(ctx, testCoins)
 
 	removeFromPool := sdk.NewCoins(
-		sdk.NewCoin("test1", sdk.NewInt(10_000000)),
-		sdk.NewCoin("test4", sdk.NewInt(500_000000)),
+		sdk.NewCoin("test1", math.NewInt(10_000000)),
+		sdk.NewCoin("test4", math.NewInt(500_000000)),
 	)
 	preRemovePool := ak.GetAuctionPoolBalances(ctx)
 	expectedPostRemovalPool := ak.GetAuctionPoolBalances(ctx)
@@ -89,28 +90,28 @@ func (suite *KeeperTestSuite) TestSendRemoveAuctionPool() {
 	preAddToPool := ak.GetAuctionPoolBalances(ctx)
 	// Contains coins the module does not hold
 	invalidAddToPool := sdk.NewCoins(
-		sdk.NewCoin("ibc/abcdefg", sdk.NewInt(99990_000000)),
-		sdk.NewCoin("test4", sdk.NewInt(5009900_000000)),
-		sdk.NewCoin("test12", sdk.NewInt(5009900_000000)),
-		sdk.NewCoin("stake", sdk.NewInt(50)),
+		sdk.NewCoin("ibc/abcdefg", math.NewInt(99990_000000)),
+		sdk.NewCoin("test4", math.NewInt(5009900_000000)),
+		sdk.NewCoin("test12", math.NewInt(5009900_000000)),
+		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 	err := ak.SendToAuctionPool(ctx, invalidAddToPool)
 	require.Error(t, err)
 
 	// Mint everything except the test4 token
 	mint := sdk.NewCoins(
-		sdk.NewCoin("ibc/abcdefg", sdk.NewInt(99990_000000)),
-		sdk.NewCoin("test12", sdk.NewInt(5009900_000000)),
-		sdk.NewCoin("stake", sdk.NewInt(50)),
+		sdk.NewCoin("ibc/abcdefg", math.NewInt(99990_000000)),
+		sdk.NewCoin("test12", math.NewInt(5009900_000000)),
+		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 	err = ak.BankKeeper.MintCoins(ctx, types.ModuleName, mint)
 	postMint := ak.BankKeeper.GetAllBalances(ctx, aucAcc)
 	require.NoError(t, err)
 	addToPool := sdk.NewCoins(
-		sdk.NewCoin("ibc/abcdefg", sdk.NewInt(99990_000000)),
-		sdk.NewCoin("test4", sdk.NewInt(59_000000)),
-		sdk.NewCoin("test12", sdk.NewInt(5009900_000000)),
-		sdk.NewCoin("stake", sdk.NewInt(50)),
+		sdk.NewCoin("ibc/abcdefg", math.NewInt(99990_000000)),
+		sdk.NewCoin("test4", math.NewInt(59_000000)),
+		sdk.NewCoin("test12", math.NewInt(5009900_000000)),
+		sdk.NewCoin("stake", math.NewInt(50)),
 	)
 	expectedPostAddPool := preAddToPool.Add(addToPool...)
 	err = ak.SendToAuctionPool(ctx, addToPool)

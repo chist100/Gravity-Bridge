@@ -114,7 +114,7 @@ func EthAddrLessThan(e EthAddress, o EthAddress) bool {
 
 // NewERC20Token returns a new instance of an ERC20
 func NewERC20Token(amount uint64, contract string) ERC20Token {
-	return ERC20Token{Amount: sdk.NewIntFromUint64(amount), Contract: contract}
+	return ERC20Token{Amount: math.NewIntFromUint64(amount), Contract: contract}
 }
 
 // NewSDKIntERC20Token returns a new instance of an ERC20, accepting a math.Int

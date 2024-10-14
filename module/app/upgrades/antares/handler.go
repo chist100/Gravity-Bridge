@@ -1,15 +1,15 @@
 package antares
 
 import (
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 )
 
 func GetAntaresUpgradeHandler(
@@ -23,7 +23,7 @@ func GetAntaresUpgradeHandler(
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vmap module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Antares upgrade: Starting upgrade")
 
-		vmap[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
+		vmap[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].(ica.AppModule).ConsensusVersion()
 		icaHostParams := icahosttypes.Params{
 			HostEnabled:   false,
 			AllowMessages: []string{},

@@ -6,14 +6,19 @@ import (
 	"time"
 
 	math "cosmossdk.io/math"
+	"cosmossdk.io/store"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/upgrade"
+	upgradeclient "cosmossdk.io/x/upgrade/client"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -32,7 +37,6 @@ import (
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
@@ -54,24 +58,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
 	dbm "github.com/tendermint/tm-db"
 
-	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-
-	bech32ibckeeper "github.com/althea-net/bech32-ibc/x/bech32ibc/keeper"
-	bech32ibctypes "github.com/althea-net/bech32-ibc/x/bech32ibc/types"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibchost "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	ethermintcryptocodec "github.com/evmos/ethermint/crypto/codec"
 	ethermintcodec "github.com/evmos/ethermint/encoding/codec"
@@ -227,7 +224,7 @@ var (
 		MaxEntries:        10,
 		HistoricalEntries: 10000,
 		BondDenom:         "stake",
-		MinCommissionRate: sdk.NewDecWithPrec(5, 2), // 5%
+		MinCommissionRate: math.LegacyNewDecWithPrec(5, 2), // 5%
 	}
 
 	// TestingGravityParams is a set of gravity params for testing
@@ -242,16 +239,16 @@ var (
 		TargetBatchTimeout:           60001,
 		AverageBlockTime:             5000,
 		AverageEthereumBlockTime:     15000,
-		SlashFractionValset:          sdk.NewDecWithPrec(1, 2),
-		SlashFractionBatch:           sdk.NewDecWithPrec(1, 2),
-		SlashFractionLogicCall:       sdk.Dec{},
+		SlashFractionValset:          math.LegacyNewDecWithPrec(1, 2),
+		SlashFractionBatch:           math.LegacyNewDecWithPrec(1, 2),
+		SlashFractionLogicCall:       math.LegacyDec{},
 		UnbondSlashingValsetsWindow:  15,
-		SlashFractionBadEthSignature: sdk.NewDecWithPrec(1, 2),
-		ValsetReward:                 sdk.Coin{Denom: "", Amount: sdk.ZeroInt()},
+		SlashFractionBadEthSignature: math.LegacyNewDecWithPrec(1, 2),
+		ValsetReward:                 sdk.Coin{Denom: "", Amount: math.ZeroInt()},
 		BridgeActive:                 true,
 		EthereumBlacklist:            []string{},
 		MinChainFeeBasisPoints:       0,
-		ChainFeeAuctionPoolFraction:  sdk.NewDecWithPrec(50, 2), // 50%
+		ChainFeeAuctionPoolFraction:  math.LegacyNewDecWithPrec(50, 2), // 50%
 	}
 )
 
@@ -284,7 +281,7 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 	input.StakingKeeper.SetParams(input.Context, TestingStakeParams)
 
 	// Initialize each of the validators
-	sMsgServer := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	sMsgServer := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
 	// sh := staking.NewHandler(input.StakingKeeper)
 	for i := range []int{0, 1, 2, 3, 4} {
 
@@ -340,7 +337,7 @@ func SetupTestChain(t *testing.T, weights []uint64, setDelegateAddresses bool) (
 	input.StakingKeeper.SetParams(input.Context, TestingStakeParams)
 
 	// Initialize each of the validators
-	sMsgServer := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	sMsgServer := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
 	for i, weight := range weights {
 		consPrivKey := ed25519.GenPrivKey()
 		consPubKey := consPrivKey.PubKey()
@@ -367,7 +364,7 @@ func SetupTestChain(t *testing.T, weights []uint64, setDelegateAddresses bool) (
 		// and the staking handler
 		_, err := sMsgServer.CreateValidator(
 			input.Context,
-			NewTestMsgCreateValidator(valAddr, consPubKey, sdk.NewIntFromUint64(weight)),
+			NewTestMsgCreateValidator(valAddr, consPubKey, math.NewIntFromUint64(weight)),
 		)
 		require.NoError(t, err)
 
@@ -397,7 +394,7 @@ func SetupTestChain(t *testing.T, weights []uint64, setDelegateAddresses bool) (
 
 	// some inputs can cause the validator creation ot not work, this checks that
 	// everything was successful
-	validators := input.StakingKeeper.GetBondedValidatorsByPower(input.Context)
+	validators, _ := input.StakingKeeper.GetBondedValidatorsByPower(input.Context)
 	require.Equal(t, len(weights), len(validators))
 
 	// Return the test input
@@ -409,22 +406,21 @@ func CreateTestEnv(t *testing.T) TestInput {
 	t.Helper()
 
 	// Initialize store keys
-	gravityKey := sdk.NewKVStoreKey(types.StoreKey)
-	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
-	keyStaking := sdk.NewKVStoreKey(stakingtypes.StoreKey)
-	keyBank := sdk.NewKVStoreKey(banktypes.StoreKey)
-	keyDistro := sdk.NewKVStoreKey(distrtypes.StoreKey)
-	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
-	keyGov := sdk.NewKVStoreKey(govtypes.StoreKey)
-	keySlashing := sdk.NewKVStoreKey(slashingtypes.StoreKey)
-	keyCapability := sdk.NewKVStoreKey(capabilitytypes.StoreKey)
-	keyUpgrade := sdk.NewKVStoreKey(upgradetypes.StoreKey)
-	keyIbc := sdk.NewKVStoreKey(ibchost.StoreKey)
-	keyIbcTransfer := sdk.NewKVStoreKey(ibctransfertypes.StoreKey)
-	keyBech32Ibc := sdk.NewKVStoreKey(bech32ibctypes.StoreKey)
-	keyMint := sdk.NewKVStoreKey(minttypes.StoreKey)
-	keyAuction := sdk.NewKVStoreKey(auctiontypes.StoreKey)
+	gravityKey := storetypes.NewKVStoreKey(types.StoreKey)
+	keyAcc := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	keyStaking := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	keyBank := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	keyDistro := storetypes.NewKVStoreKey(distrtypes.StoreKey)
+	keyParams := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tkeyParams := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
+	keyGov := storetypes.NewKVStoreKey(govtypes.StoreKey)
+	keySlashing := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
+	keyCapability := storetypes.NewKVStoreKey(capabilitytypes.StoreKey)
+	keyUpgrade := storetypes.NewKVStoreKey(upgradetypes.StoreKey)
+	keyIbc := storetypes.NewKVStoreKey(ibchost.StoreKey)
+	keyIbcTransfer := storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
+	keyMint := storetypes.NewKVStoreKey(minttypes.StoreKey)
+	keyAuction := storetypes.NewKVStoreKey(auctiontypes.StoreKey)
 
 	// Initialize memory database and mount stores on it
 	db := dbm.NewMemDB()
@@ -442,7 +438,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 	ms.MountStoreWithDB(keyUpgrade, storetypes.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyIbc, storetypes.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyIbcTransfer, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyBech32Ibc, storetypes.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyMint, storetypes.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAuction, storetypes.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
@@ -488,7 +483,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(bech32ibctypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(auctiontypes.ModuleName)
 
@@ -623,16 +617,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 		accountKeeper, bankKeeper, scopedTransferKeeper,
 	)
 
-	bech32IbcKeeper := *bech32ibckeeper.NewKeeper(
-		ibcKeeper.ChannelKeeper, marshaler, keyBech32Ibc,
-		ibcTransferKeeper,
-	)
-	// Set the native prefix to the "gravity" value we like in module/config/config.go
-	err = bech32IbcKeeper.SetNativeHrp(ctx, sdk.GetConfig().GetBech32AccountAddrPrefix())
-	if err != nil {
-		panic("Test Env Creation failure, could not set native hrp")
-	}
-
 	mintKeeper := mintkeeper.NewKeeper(marshaler, keyMint, getSubspace(paramsKeeper, minttypes.ModuleName), stakingKeeper, accountKeeper, bankKeeper, authtypes.FeeCollectorName)
 	mintKeeper.SetParams(ctx, minttypes.DefaultParams())
 
@@ -640,7 +624,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 	auctionKeeper.SetParams(ctx, auctiontypes.DefaultParams())
 
 	k := NewKeeper(gravityKey, getSubspace(paramsKeeper, types.DefaultParamspace), marshaler, &bankKeeper,
-		&stakingKeeper, &slashingKeeper, &distKeeper, &accountKeeper, &ibcTransferKeeper, &bech32IbcKeeper, &auctionKeeper)
+		&stakingKeeper, &slashingKeeper, &distKeeper, &accountKeeper, &ibcTransferKeeper, &auctionKeeper)
 
 	stakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
@@ -664,11 +648,11 @@ func CreateTestEnv(t *testing.T) TestInput {
 	testInput := TestInput{
 		GravityKeeper:     k,
 		AccountKeeper:     accountKeeper,
-		StakingKeeper:     stakingKeeper,
+		StakingKeeper:     *stakingKeeper,
 		SlashingKeeper:    slashingKeeper,
 		DistKeeper:        distKeeper,
 		BankKeeper:        bankKeeper,
-		GovKeeper:         govKeeper,
+		GovKeeper:         *govKeeper,
 		IbcKeeper:         ibcKeeper,
 		IbcTransferKeeper: ibcTransferKeeper,
 		MintKeeper:        mintKeeper,
@@ -759,7 +743,7 @@ func MintVouchersFromAir(t *testing.T, ctx sdk.Context, k Keeper, dest sdk.AccAd
 }
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey ccrypto.PubKey, amt math.Int) *stakingtypes.MsgCreateValidator {
-	fivePercent := sdk.NewDecWithPrec(5, 2)
+	fivePercent := math.LegacyNewDecWithPrec(5, 2)
 	commission := stakingtypes.NewCommissionRates(fivePercent, fivePercent, fivePercent)
 	out, err := stakingtypes.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin("stake", amt),
@@ -769,7 +753,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey ccrypto.PubKey, am
 			Website:         "",
 			SecurityContact: "",
 			Details:         "",
-		}, commission, sdk.OneInt(),
+		}, commission, math.OneInt(),
 	)
 	if err != nil {
 		panic(err)

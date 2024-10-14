@@ -3,10 +3,10 @@ package apollo
 import (
 	"fmt"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	auctionkeeper "github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/keeper"
 	auctiontypes "github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"

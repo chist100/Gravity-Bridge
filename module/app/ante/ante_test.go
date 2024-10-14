@@ -1,14 +1,17 @@
 package ante
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	authsigning "cosmossdk.io/x/tx/signing"
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,7 +22,6 @@ import (
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -119,17 +121,17 @@ func BuildRegularTx(t *testing.T, ctx sdk.Context, txConfig client.TxConfig, ak 
 	account := ak.GetAccount(ctx, keeper.AccAddrs[0])
 	an := account.GetAccountNumber()
 	s := account.GetSequence()
-	err := SignRegular(t, tx, signing.SignMode_SIGN_MODE_DIRECT, txConfig, ctx.ChainID(), an, s)
+	err := SignRegular(t, tx, signingv1beta1.SignMode_SIGN_MODE_DIRECT, txConfig, ctx.ChainID(), an, s)
 	require.NoError(t, err)
 
 	return tx.GetTx()
 }
 
 // Signs the WIP Tx in txBuilder using the standard cosmos signing style
-func SignRegular(t *testing.T, txBuilder client.TxBuilder, signMode signing.SignMode, txConfig client.TxConfig, chainID string, accNum uint64, seq uint64) error {
-	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+func SignRegular(t *testing.T, txBuilder client.TxBuilder, signMode signingv1beta1.SignMode, txConfig client.TxConfig, chainID string, accNum uint64, seq uint64) error {
+	if signMode == signingv1beta1.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txConfig.SignModeHandler().DefaultMode()
+		signMode = signingv1beta1.SignMode(txConfig.SignModeHandler().DefaultMode())
 	}
 	pubKey := keeper.AccPubKeys[0]
 	// nolint: exhaustruct
@@ -140,7 +142,7 @@ func SignRegular(t *testing.T, txBuilder client.TxBuilder, signMode signing.Sign
 	}
 
 	sigData := signing.SingleSignatureData{
-		SignMode:  signMode,
+		SignMode:  signing.SignMode_SIGN_MODE_UNSPECIFIED,
 		Signature: nil,
 	}
 	sig := signing.SignatureV2{
@@ -153,7 +155,8 @@ func SignRegular(t *testing.T, txBuilder client.TxBuilder, signMode signing.Sign
 	}
 
 	// Generate the bytes to be signed.
-	bytesToSign, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	ctx := context.Background()
+	bytesToSign, err := txConfig.SignModeHandler().GetSignBytes(ctx, signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
@@ -167,7 +170,7 @@ func SignRegular(t *testing.T, txBuilder client.TxBuilder, signMode signing.Sign
 
 	// Construct the SignatureV2 struct
 	sigData = signing.SingleSignatureData{
-		SignMode:  signMode,
+		SignMode:  signing.SignMode_SIGN_MODE_UNSPECIFIED,
 		Signature: sigBytes,
 	}
 	sig = signing.SignatureV2{
@@ -238,7 +241,7 @@ func SignEip712(
 
 	fee := legacytx.NewStdFee(gas, fees) //nolint: staticcheck
 
-	data := legacytx.StdSignBytes(ctx.ChainID(), accNumber, nonce, 0, fee, msgs, "", nil)
+	data := legacytx.StdSignBytes(ctx.ChainID(), accNumber, nonce, 0, fee, msgs, "")
 
 	typedData, err := CreateTypedData(chainId, msgs[0], data, from)
 	if err != nil {
@@ -265,7 +268,7 @@ func SignEip712(
 	}
 
 	keyringSigner := testtx.NewSigner(privKey)
-	signature, pubKey, err := keyringSigner.SignByAddress(from, sigHash)
+	signature, pubKey, err := keyringSigner.SignByAddress(from, sigHash, signing.SignMode_SIGN_MODE_EIP_191)
 	if err != nil {
 		return nil, nil, err
 	}

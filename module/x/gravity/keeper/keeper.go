@@ -8,8 +8,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -20,14 +20,12 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
-	bech32ibckeeper "github.com/althea-net/bech32-ibc/x/bech32ibc/keeper"
-
+	"cosmossdk.io/store/prefix"
 	auctionkeeper "github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/keeper"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
 // Check that our expected keeper types are implemented
@@ -49,7 +47,6 @@ type Keeper struct {
 	DistKeeper        *distrkeeper.Keeper
 	accountKeeper     *authkeeper.AccountKeeper
 	ibcTransferKeeper *ibctransferkeeper.Keeper
-	bech32IbcKeeper   *bech32ibckeeper.Keeper
 	auctionKeeper     *auctionkeeper.Keeper
 
 	AttestationHandler interface {
@@ -77,9 +74,6 @@ func (k Keeper) ValidateMembers() {
 	if k.ibcTransferKeeper == nil {
 		panic("Nil ibcTransferKeeper!")
 	}
-	if k.bech32IbcKeeper == nil {
-		panic("Nil bech32IbcKeeper!")
-	}
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -93,7 +87,6 @@ func NewKeeper(
 	distKeeper *distrkeeper.Keeper,
 	accKeeper *authkeeper.AccountKeeper,
 	ibcTransferKeeper *ibctransferkeeper.Keeper,
-	bech32IbcKeeper *bech32ibckeeper.Keeper,
 	auctionKeeper *auctionkeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
@@ -112,7 +105,6 @@ func NewKeeper(
 		DistKeeper:         distKeeper,
 		accountKeeper:      accKeeper,
 		ibcTransferKeeper:  ibcTransferKeeper,
-		bech32IbcKeeper:    bech32IbcKeeper,
 		auctionKeeper:      auctionKeeper,
 		AttestationHandler: nil,
 	}
@@ -136,9 +128,12 @@ func (k Keeper) SendToCommunityPool(ctx sdk.Context, coins sdk.Coins) error {
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, distrtypes.ModuleName, coins); err != nil {
 		return errorsmod.Wrap(err, "transfer to community pool failed")
 	}
-	feePool := k.DistKeeper.GetFeePool(ctx)
+	feePool, err := k.DistKeeper.FeePool.Get(ctx)
+	if err != nil {
+		return errorsmod.Wrap(err, "transfer to community pool failed")
+	}
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(coins...)...)
-	k.DistKeeper.SetFeePool(ctx, feePool)
+	k.DistKeeper.FeePool.Set(ctx, feePool)
 	return nil
 }
 

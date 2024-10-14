@@ -2,15 +2,15 @@ package types
 
 import (
 	"fmt"
-	math "math"
+	mathr "math"
 	"math/big"
 	"sort"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	mathmod "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -149,10 +149,10 @@ func (b InternalBridgeValidators) PowerDiff(c InternalBridgeValidators) float64 
 	var delta float64
 	for _, v := range powers {
 		// NOTE: we care about the absolute value of the changes
-		delta += math.Abs(float64(v))
+		delta += mathr.Abs(float64(v))
 	}
 
-	return math.Abs(delta / float64(math.MaxUint32))
+	return mathr.Abs(delta / float64(mathr.MaxUint32))
 }
 
 // TotalPower returns the total power in the bridge validator set
@@ -373,7 +373,7 @@ func (v Valsets) ValidateBasic() error {
 
 // GetFees returns the total fees contained within a given batch
 func (b OutgoingTxBatch) GetFees() mathmod.Int {
-	sum := sdk.ZeroInt()
+	sum := math.ZeroInt()
 	for _, t := range b.Transactions {
 		sum = sum.Add(t.Erc20Fee.Amount)
 	}

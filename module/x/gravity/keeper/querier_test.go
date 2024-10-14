@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	gethcommon "github.com/ethereum/go-ethereum/common"
@@ -165,7 +166,7 @@ func TestLastValsetRequests(t *testing.T) {
 	val1 := types.Valset{
 		Nonce:        6,
 		Height:       1235167,
-		RewardAmount: sdk.ZeroInt(),
+		RewardAmount: math.ZeroInt(),
 		RewardToken:  "0x0000000000000000000000000000000000000000",
 		Members: []types.BridgeValidator{
 			{
@@ -194,7 +195,7 @@ func TestLastValsetRequests(t *testing.T) {
 	val2 := types.Valset{
 		Nonce:        5,
 		Height:       1235067,
-		RewardAmount: sdk.ZeroInt(),
+		RewardAmount: math.ZeroInt(),
 		RewardToken:  "0x0000000000000000000000000000000000000000",
 		Members: []types.BridgeValidator{
 			{
@@ -223,7 +224,7 @@ func TestLastValsetRequests(t *testing.T) {
 	val3 := types.Valset{
 		Nonce:        4,
 		Height:       1234967,
-		RewardAmount: sdk.ZeroInt(),
+		RewardAmount: math.ZeroInt(),
 		RewardToken:  "0x0000000000000000000000000000000000000000",
 		Members: []types.BridgeValidator{
 			{
@@ -248,7 +249,7 @@ func TestLastValsetRequests(t *testing.T) {
 	val4 := types.Valset{
 		Nonce:        3,
 		Height:       1234867,
-		RewardAmount: sdk.ZeroInt(),
+		RewardAmount: math.ZeroInt(),
 		RewardToken:  "0x0000000000000000000000000000000000000000",
 		Members: []types.BridgeValidator{
 			{
@@ -269,7 +270,7 @@ func TestLastValsetRequests(t *testing.T) {
 	val5 := types.Valset{
 		Nonce:        2,
 		Height:       1234767,
-		RewardAmount: sdk.ZeroInt(),
+		RewardAmount: math.ZeroInt(),
 		RewardToken:  "0x0000000000000000000000000000000000000000",
 		Members: []types.BridgeValidator{
 			{
@@ -331,7 +332,7 @@ func TestPendingValsetRequests(t *testing.T) {
 				{
 					Nonce:        6,
 					Height:       1235167,
-					RewardAmount: sdk.ZeroInt(),
+					RewardAmount: math.ZeroInt(),
 					RewardToken:  "0x0000000000000000000000000000000000000000",
 					Members: []types.BridgeValidator{
 						{
@@ -359,7 +360,7 @@ func TestPendingValsetRequests(t *testing.T) {
 				{
 					Nonce:        5,
 					Height:       1235067,
-					RewardAmount: sdk.ZeroInt(),
+					RewardAmount: math.ZeroInt(),
 					RewardToken:  "0x0000000000000000000000000000000000000000",
 					Members: []types.BridgeValidator{
 						{
@@ -387,7 +388,7 @@ func TestPendingValsetRequests(t *testing.T) {
 				{
 					Nonce:        4,
 					Height:       1234967,
-					RewardAmount: sdk.ZeroInt(),
+					RewardAmount: math.ZeroInt(),
 					RewardToken:  "0x0000000000000000000000000000000000000000",
 					Members: []types.BridgeValidator{
 						{
@@ -411,7 +412,7 @@ func TestPendingValsetRequests(t *testing.T) {
 				{
 					Nonce:        3,
 					Height:       1234867,
-					RewardAmount: sdk.ZeroInt(),
+					RewardAmount: math.ZeroInt(),
 					RewardToken:  "0x0000000000000000000000000000000000000000",
 					Members: []types.BridgeValidator{
 						{
@@ -431,7 +432,7 @@ func TestPendingValsetRequests(t *testing.T) {
 				{
 					Nonce:        2,
 					Height:       1234767,
-					RewardAmount: sdk.ZeroInt(),
+					RewardAmount: math.ZeroInt(),
 					RewardToken:  "0x0000000000000000000000000000000000000000",
 					Members: []types.BridgeValidator{
 						{
@@ -453,7 +454,7 @@ func TestPendingValsetRequests(t *testing.T) {
 						},
 					},
 					Height:       1234667,
-					RewardAmount: sdk.NewInt(0),
+					RewardAmount: math.NewInt(0),
 					RewardToken:  "0x0000000000000000000000000000000000000000",
 				},
 			},
@@ -507,11 +508,11 @@ func TestLastPendingBatchRequest(t *testing.T) {
 							Sender:      "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
 							DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 							Erc20Token: types.ERC20Token{
-								Amount:   sdk.NewInt(101),
+								Amount:   math.NewInt(101),
 								Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 							},
 							Erc20Fee: types.ERC20Token{
-								Amount:   sdk.NewInt(3),
+								Amount:   math.NewInt(3),
 								Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 							},
 						},
@@ -520,11 +521,11 @@ func TestLastPendingBatchRequest(t *testing.T) {
 							Sender:      "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
 							DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 							Erc20Token: types.ERC20Token{
-								Amount:   sdk.NewInt(102),
+								Amount:   math.NewInt(102),
 								Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 							},
 							Erc20Fee: types.ERC20Token{
-								Amount:   sdk.NewInt(2),
+								Amount:   math.NewInt(2),
 								Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 							},
 						},
@@ -568,7 +569,7 @@ func createTestBatch(t *testing.T, input TestInput, maxTxElements uint) {
 	tokenContract, err := types.NewEthAddress(myTokenContractAddr)
 	require.NoError(t, err)
 	// mint some voucher first
-	token, err := types.NewInternalERC20Token(sdk.NewInt(99999), myTokenContractAddr)
+	token, err := types.NewInternalERC20Token(math.NewInt(99999), myTokenContractAddr)
 	require.NoError(t, err)
 	allVouchers := sdk.Coins{token.GravityCoin()}
 	err = input.BankKeeper.MintCoins(input.Context, types.ModuleName, allVouchers)
@@ -581,10 +582,10 @@ func createTestBatch(t *testing.T, input TestInput, maxTxElements uint) {
 
 	// add some TX to the pool
 	for i, v := range []uint64{2, 3, 2, 1} {
-		amountToken, err := types.NewInternalERC20Token(sdk.NewInt(int64(i+100)), myTokenContractAddr)
+		amountToken, err := types.NewInternalERC20Token(math.NewInt(int64(i+100)), myTokenContractAddr)
 		require.NoError(t, err)
 		amount := amountToken.GravityCoin()
-		feeToken, err := types.NewInternalERC20Token(sdk.NewIntFromUint64(v), myTokenContractAddr)
+		feeToken, err := types.NewInternalERC20Token(math.NewIntFromUint64(v), myTokenContractAddr)
 		require.NoError(t, err)
 		fee := feeToken.GravityCoin()
 		_, err = input.GravityKeeper.AddToOutgoingPool(input.Context, mySender, *receiver, amount, fee)
@@ -680,7 +681,7 @@ func TestQueryLogicCalls(t *testing.T) {
 
 	token := []types.ERC20Token{{
 		Contract: tokenContract,
-		Amount:   sdk.NewIntFromUint64(5000),
+		Amount:   math.NewIntFromUint64(5000),
 	}}
 
 	call := types.OutgoingLogicCall{
@@ -741,7 +742,7 @@ func TestQueryLogicCallConfirms(t *testing.T) {
 
 	token := []types.ERC20Token{{
 		Contract: tokenContract,
-		Amount:   sdk.NewIntFromUint64(5000),
+		Amount:   math.NewIntFromUint64(5000),
 	}}
 
 	call := types.OutgoingLogicCall{
@@ -797,12 +798,12 @@ func TestQueryBatch(t *testing.T) {
 			Transactions: []types.OutgoingTransferTx{
 				{
 					Erc20Fee: types.ERC20Token{
-						Amount:   sdk.NewInt(3),
+						Amount:   math.NewInt(3),
 						Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 					},
 					DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 					Erc20Token: types.ERC20Token{
-						Amount:   sdk.NewInt(101),
+						Amount:   math.NewInt(101),
 						Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 					},
 					Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -810,12 +811,12 @@ func TestQueryBatch(t *testing.T) {
 				},
 				{
 					Erc20Fee: types.ERC20Token{
-						Amount:   sdk.NewInt(2),
+						Amount:   math.NewInt(2),
 						Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 					},
 					DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 					Erc20Token: types.ERC20Token{
-						Amount:   sdk.NewInt(102),
+						Amount:   math.NewInt(102),
 						Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 					},
 					Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -853,12 +854,12 @@ func TestLastBatchesRequest(t *testing.T) {
 				Transactions: []types.OutgoingTransferTx{
 					{
 						Erc20Fee: types.ERC20Token{
-							Amount:   sdk.NewInt(3),
+							Amount:   math.NewInt(3),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 						Erc20Token: types.ERC20Token{
-							Amount:   sdk.NewInt(101),
+							Amount:   math.NewInt(101),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -866,12 +867,12 @@ func TestLastBatchesRequest(t *testing.T) {
 					},
 					{
 						Erc20Fee: types.ERC20Token{
-							Amount:   sdk.NewInt(2),
+							Amount:   math.NewInt(2),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 						Erc20Token: types.ERC20Token{
-							Amount:   sdk.NewInt(102),
+							Amount:   math.NewInt(102),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -879,12 +880,12 @@ func TestLastBatchesRequest(t *testing.T) {
 					},
 					{
 						Erc20Fee: types.ERC20Token{
-							Amount:   sdk.NewInt(2),
+							Amount:   math.NewInt(2),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 						Erc20Token: types.ERC20Token{
-							Amount:   sdk.NewInt(100),
+							Amount:   math.NewInt(100),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -900,12 +901,12 @@ func TestLastBatchesRequest(t *testing.T) {
 				Transactions: []types.OutgoingTransferTx{
 					{
 						Erc20Fee: types.ERC20Token{
-							Amount:   sdk.NewInt(3),
+							Amount:   math.NewInt(3),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 						Erc20Token: types.ERC20Token{
-							Amount:   sdk.NewInt(101),
+							Amount:   math.NewInt(101),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -913,12 +914,12 @@ func TestLastBatchesRequest(t *testing.T) {
 					},
 					{
 						Erc20Fee: types.ERC20Token{
-							Amount:   sdk.NewInt(2),
+							Amount:   math.NewInt(2),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						DestAddress: "0x320915BD0F1bad11cBf06e85D5199DBcAC4E9934",
 						Erc20Token: types.ERC20Token{
-							Amount:   sdk.NewInt(102),
+							Amount:   math.NewInt(102),
 							Contract: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
 						},
 						Sender: "gravity1qyqszqgpqyqszqgpqyqszqgpqyqszqgpkrnxg5",
@@ -942,7 +943,7 @@ func TestQueryCurrentValset(t *testing.T) {
 		expectedValset = types.Valset{
 			Nonce:        1,
 			Height:       1234567,
-			RewardAmount: sdk.ZeroInt(),
+			RewardAmount: math.ZeroInt(),
 			RewardToken:  "0x0000000000000000000000000000000000000000",
 			Members: []types.BridgeValidator{
 				{
@@ -1042,7 +1043,7 @@ func TestQueryPendingSendToEth(t *testing.T) {
 		mySender, err1      = sdk.AccAddressFromBech32("gravity1ahx7f8wyertuus9r20284ej0asrs085ceqtfnm")
 		myReceiver          = "0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7"
 		myTokenContractAddr = "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5" // Pickle
-		token, err2         = types.NewInternalERC20Token(sdk.NewInt(99999), myTokenContractAddr)
+		token, err2         = types.NewInternalERC20Token(math.NewInt(99999), myTokenContractAddr)
 		allVouchers         = sdk.NewCoins(token.GravityCoin())
 	)
 	require.NoError(t, err1)
@@ -1063,10 +1064,10 @@ func TestQueryPendingSendToEth(t *testing.T) {
 
 	// add some TX to the pool
 	for i, v := range []uint64{2, 3, 2, 1} {
-		amountToken, err := types.NewInternalERC20Token(sdk.NewInt(int64(i+100)), myTokenContractAddr)
+		amountToken, err := types.NewInternalERC20Token(math.NewInt(int64(i+100)), myTokenContractAddr)
 		require.NoError(t, err)
 		amount := amountToken.GravityCoin()
-		feeToken, err := types.NewInternalERC20Token(sdk.NewIntFromUint64(v), myTokenContractAddr)
+		feeToken, err := types.NewInternalERC20Token(math.NewIntFromUint64(v), myTokenContractAddr)
 		require.NoError(t, err)
 		fee := feeToken.GravityCoin()
 		_, err = input.GravityKeeper.AddToOutgoingPool(sdkCtx, mySender, *receiver, amount, fee)
@@ -1096,11 +1097,11 @@ func TestQueryPendingSendToEth(t *testing.T) {
 			DestAddress: "0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7",
 			Erc20Token: types.ERC20Token{
 				Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-				Amount:   sdk.NewInt(101),
+				Amount:   math.NewInt(101),
 			},
 			Erc20Fee: types.ERC20Token{
 				Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-				Amount:   sdk.NewInt(3),
+				Amount:   math.NewInt(3),
 			},
 		},
 		{
@@ -1109,11 +1110,11 @@ func TestQueryPendingSendToEth(t *testing.T) {
 			DestAddress: "0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7",
 			Erc20Token: types.ERC20Token{
 				Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-				Amount:   sdk.NewInt(102),
+				Amount:   math.NewInt(102),
 			},
 			Erc20Fee: types.ERC20Token{
 				Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-				Amount:   sdk.NewInt(2),
+				Amount:   math.NewInt(2),
 			},
 		},
 	},
@@ -1125,11 +1126,11 @@ func TestQueryPendingSendToEth(t *testing.T) {
 				DestAddress: "0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7",
 				Erc20Token: types.ERC20Token{
 					Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-					Amount:   sdk.NewInt(100),
+					Amount:   math.NewInt(100),
 				},
 				Erc20Fee: types.ERC20Token{
 					Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-					Amount:   sdk.NewInt(2),
+					Amount:   math.NewInt(2),
 				},
 			},
 			{
@@ -1138,11 +1139,11 @@ func TestQueryPendingSendToEth(t *testing.T) {
 				DestAddress: "0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7",
 				Erc20Token: types.ERC20Token{
 					Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-					Amount:   sdk.NewInt(103),
+					Amount:   math.NewInt(103),
 				},
 				Erc20Fee: types.ERC20Token{
 					Contract: "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5",
-					Amount:   sdk.NewInt(1),
+					Amount:   math.NewInt(1),
 				},
 			},
 		},

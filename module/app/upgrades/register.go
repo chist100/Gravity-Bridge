@@ -1,7 +1,7 @@
 package upgrades
 
 import (
-	bech32ibckeeper "github.com/althea-net/bech32-ibc/x/bech32ibc/keeper"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -9,8 +9,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/app/upgrades/antares"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/app/upgrades/apollo"
@@ -27,18 +26,18 @@ import (
 // along with a Gravity interface
 func RegisterUpgradeHandlers(
 	mm *module.Manager, configurator *module.Configurator, accountKeeper *authkeeper.AccountKeeper,
-	bankKeeper *bankkeeper.BaseKeeper, bech32IbcKeeper *bech32ibckeeper.Keeper, distrKeeper *distrkeeper.Keeper,
+	bankKeeper *bankkeeper.BaseKeeper, distrKeeper *distrkeeper.Keeper,
 	mintKeeper *mintkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, upgradeKeeper *upgradekeeper.Keeper,
 	crisisKeeper *crisiskeeper.Keeper, transferKeeper *ibctransferkeeper.Keeper, auctionKeeper *auctionkeeper.Keeper,
 ) {
-	if mm == nil || configurator == nil || accountKeeper == nil || bankKeeper == nil || bech32IbcKeeper == nil ||
+	if mm == nil || configurator == nil || accountKeeper == nil || bankKeeper == nil ||
 		distrKeeper == nil || mintKeeper == nil || stakingKeeper == nil || upgradeKeeper == nil || auctionKeeper == nil {
 		panic("Nil argument to RegisterUpgradeHandlers()!")
 	}
 	// Mercury aka v1->v2 UPGRADE HANDLER SETUP
 	upgradeKeeper.SetUpgradeHandler(
 		v2.V1ToV2PlanName, // Codename Mercury
-		v2.GetV2UpgradeHandler(mm, configurator, accountKeeper, bankKeeper, bech32IbcKeeper, distrKeeper, mintKeeper, stakingKeeper),
+		v2.GetV2UpgradeHandler(mm, configurator, accountKeeper, bankKeeper, distrKeeper, mintKeeper, stakingKeeper),
 	)
 	// Mercury Fix aka mercury2.0 UPGRADE HANDLER SETUP
 	upgradeKeeper.SetUpgradeHandler(

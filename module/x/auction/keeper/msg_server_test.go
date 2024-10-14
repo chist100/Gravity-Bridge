@@ -13,7 +13,7 @@ import (
 var one_eth math.Int
 
 func init() {
-	tenTo18, ok := sdk.NewIntFromString("1000000000000000000") // 10^18
+	tenTo18, ok := math.NewIntFromString("1000000000000000000") // 10^18
 	if !ok {
 		panic("failed to create one_eth value")
 	}
@@ -21,19 +21,21 @@ func init() {
 }
 
 func (suite *KeeperTestSuite) TestMsgBid() {
-	testCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000_000000)), sdk.NewCoin("bar", sdk.NewInt(1000_000000)), sdk.NewCoin("baz", sdk.NewInt(1000_000000)))
+	testCoins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1000_000000)), sdk.NewCoin("bar", math.NewInt(1000_000000)), sdk.NewCoin("baz", math.NewInt(1000_000000)))
 	ctx := suite.Ctx
 	t := suite.T()
 	ak := suite.App.AuctionKeeper
-	gravDenom := ak.MintKeeper.GetParams(ctx).MintDenom
+	params, err := ak.MintKeeper.Params.Get(ctx)
+	require.NoError(t, err)
+	gravDenom := params.MintDenom
 	// Give everyone 10 * 10^18 aka 10 Eth worth
-	suite.CreateAndFundRandomAccounts(3, sdk.NewCoins(sdk.NewCoin(gravDenom, one_eth.Mul(sdk.NewInt(10)))))
+	suite.CreateAndFundRandomAccounts(3, sdk.NewCoins(sdk.NewCoin(gravDenom, one_eth.Mul(math.NewInt(10)))))
 	suite.FundAuctionPool(ctx, testCoins)
 
 	periodEnd := ak.GetAuctionPeriod(ctx).EndBlockHeight
 	ctx = ctx.WithBlockHeight(int64(periodEnd))
 	// Create auctions for all of testCoins
-	_, err := ak.CreateNewAuctionPeriod(ctx)
+	_, err = ak.CreateNewAuctionPeriod(ctx)
 	require.NoError(t, err)
 	err = ak.CreateAuctionsForAuctionPeriod(ctx)
 	require.NoError(t, err)
@@ -50,11 +52,11 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 			expectedPass: true,
 		},
 		"HappyBigFee": {
-			msg:          *types.NewMsgBid(1, suite.AppTestHelper.TestAccs[1].String(), uint64(1_000000), one_eth.Mul(sdk.NewInt(5)).Uint64()),
+			msg:          *types.NewMsgBid(1, suite.AppTestHelper.TestAccs[1].String(), uint64(1_000000), one_eth.Mul(math.NewInt(5)).Uint64()),
 			expectedPass: true,
 		},
 		"HappyBigAmount": {
-			msg:          *types.NewMsgBid(2, suite.AppTestHelper.TestAccs[1].String(), one_eth.Mul(sdk.NewInt(3)).Uint64(), minFee),
+			msg:          *types.NewMsgBid(2, suite.AppTestHelper.TestAccs[1].String(), one_eth.Mul(math.NewInt(3)).Uint64(), minFee),
 			expectedPass: true,
 		},
 		"SadId": {
@@ -83,8 +85,9 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 		suite.Run(name, func() {
 			msgServer := keeper.NewMsgServerImpl(*suite.App.AuctionKeeper)
 			ctx := sdk.WrapSDKContext(suite.Ctx)
-
-			bidToken := suite.App.AuctionKeeper.MintKeeper.GetParams(suite.Ctx).MintDenom
+			params, err := suite.App.AuctionKeeper.MintKeeper.Params.Get(suite.Ctx)
+			suite.Require().NoError(err)
+			bidToken := params.MintDenom
 
 			var preBal, postBal sdk.Coin
 
@@ -100,7 +103,7 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(resp)
 
-				expDiff := sdk.NewIntFromUint64(tc.msg.Amount).Add(sdk.NewIntFromUint64(tc.msg.BidFee))
+				expDiff := math.NewIntFromUint64(tc.msg.Amount).Add(math.NewIntFromUint64(tc.msg.BidFee))
 				accDiff := preBal.Sub(postBal)
 				suite.Require().True(expDiff.Equal(accDiff.Amount))
 			} else {

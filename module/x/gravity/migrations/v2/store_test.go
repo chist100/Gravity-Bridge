@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	errorsmod "cosmossdk.io/errors"
 
 	_ "github.com/Gravity-Bridge/Gravity-Bridge/module/config"
@@ -252,8 +254,8 @@ func TestMigrateOutgoingTxBatches(t *testing.T) {
 func TestMigrateStoreForUnusedKeys(t *testing.T) {
 
 	// create old format prefixes KV store
-	gravityKey := sdk.NewKVStoreKey("gravity")
-	ctx := testutil.DefaultContext(gravityKey, sdk.NewTransientStoreKey("transient-test"))
+	gravityKey :=  storetypes.NewKVStoreKey("gravity")
+	ctx := testutil.DefaultContext(gravityKey, storetypes.NewTransientStoreKey("transient-test"))
 	store := ctx.KVStore(gravityKey)
 
 	marshaler := keeper.MakeTestEncodingConfig().Marshaler
@@ -308,8 +310,8 @@ func TestMigrateStoreForUnusedKeys(t *testing.T) {
 func TestMigrateStoreKeys(t *testing.T) {
 
 	// create old format prefixes KV store
-	gravityKey := sdk.NewKVStoreKey("gravity")
-	ctx := testutil.DefaultContext(gravityKey, sdk.NewTransientStoreKey("transient-test"))
+	gravityKey := storetypes.NewKVStoreKey("gravity")
+	ctx := testutil.DefaultContext(gravityKey, storetypes.NewTransientStoreKey("transient-test"))
 	store := ctx.KVStore(gravityKey)
 
 	marshaler := keeper.MakeTestEncodingConfig().Marshaler
@@ -403,8 +405,8 @@ func TestMigrateStoreKeys(t *testing.T) {
 
 func TestMigrateStoreKeysFromKeys(t *testing.T) {
 	// create old prefixes KV store
-	gravityKey := sdk.NewKVStoreKey("gravity")
-	ctx := testutil.DefaultContext(gravityKey, sdk.NewTransientStoreKey("transient-test"))
+	gravityKey := storetypes.NewKVStoreKey("gravity")
+	ctx := testutil.DefaultContext(gravityKey, storetypes.NewTransientStoreKey("transient-test"))
 	store := ctx.KVStore(gravityKey)
 
 	marshaler := keeper.MakeTestEncodingConfig().Marshaler
@@ -514,8 +516,8 @@ func TestMigrateStoreKeysFromKeys(t *testing.T) {
 func TestMigrateStoreKeysFromValues(t *testing.T) {
 
 	// create old prefixes KV store
-	gravityKey := sdk.NewKVStoreKey("gravity")
-	ctx := testutil.DefaultContext(gravityKey, sdk.NewTransientStoreKey("transient-test"))
+	gravityKey := storetypes.NewKVStoreKey("gravity")
+	ctx := testutil.DefaultContext(gravityKey, storetypes.NewTransientStoreKey("transient-test"))
 	store := ctx.KVStore(gravityKey)
 
 	marshaler := keeper.MakeTestEncodingConfig().Marshaler
@@ -546,7 +548,7 @@ func TestMigrateStoreKeysFromValues(t *testing.T) {
 		Nonce:        1,
 		Members:      []types.BridgeValidator{},
 		Height:       128,
-		RewardAmount: sdk.NewInt(1),
+		RewardAmount: math.NewInt(1),
 		RewardToken:  "footoken",
 	}
 
@@ -569,9 +571,9 @@ func TestMigrateStoreKeysFromValues(t *testing.T) {
 	tokenId := uint64(1)
 	myReceiver, err := types.NewEthAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
 	require.NoError(t, err)
-	tokenFee, err := types.NewInternalERC20Token(sdk.NewIntFromUint64(3), tokenContract.GetAddress().String())
+	tokenFee, err := types.NewInternalERC20Token(math.NewIntFromUint64(3), tokenContract.GetAddress().String())
 	require.NoError(t, err)
-	tokenAmount, err := types.NewInternalERC20Token(sdk.NewIntFromUint64(101), tokenContract.GetAddress().String())
+	tokenAmount, err := types.NewInternalERC20Token(math.NewIntFromUint64(101), tokenContract.GetAddress().String())
 	require.NoError(t, err)
 
 	dummyInternalOutgoingTransferTx, err := types.NewInternalOutgoingTransferTx(tokenId, accAddr.String(), myReceiver.GetAddress().String(), tokenAmount.ToExternal(), tokenFee.ToExternal())
@@ -588,7 +590,7 @@ func TestMigrateStoreKeysFromValues(t *testing.T) {
 		EventNonce:     nonce,
 		EthBlockHeight: 1,
 		TokenContract:  "0x00000000000000000001",
-		Amount:         sdk.NewInt(10000000000 + int64(1)),
+		Amount:         math.NewInt(10000000000 + int64(1)),
 		EthereumSender: "0x00000000000000000002",
 		CosmosReceiver: "0x00000000000000000003",
 		Orchestrator:   "0x00000000000000000004",
@@ -614,7 +616,7 @@ func TestMigrateStoreKeysFromValues(t *testing.T) {
 
 	token := []types.ERC20Token{{
 		Contract: tokenContract.GetAddress().String(),
-		Amount:   sdk.NewIntFromUint64(5000),
+		Amount:   math.NewIntFromUint64(5000),
 	}}
 
 	call := types.OutgoingLogicCall{
@@ -728,7 +730,7 @@ func TestMigrateStoreKeysFromValues(t *testing.T) {
 func TestMigrateInvalidStore(t *testing.T) {
 
 	// create old prefixes KV store
-	gravityKey := sdk.NewKVStoreKey("gravity")
+	gravityKey := storetypes.NewKVStoreKey("gravity")
 
 	marshaler := keeper.MakeTestEncodingConfig().Marshaler
 
@@ -774,7 +776,7 @@ func TestMigrateInvalidStore(t *testing.T) {
 	// Create store with old prefix key for each test case and try to migrate it
 	// migration will fails
 	for _, tc := range migrateInvalidStoreTestCases {
-		ctx := testutil.DefaultContext(gravityKey, sdk.NewTransientStoreKey("transient-test"))
+		ctx := testutil.DefaultContext(gravityKey, storetypes.NewTransientStoreKey("transient-test"))
 		store := ctx.KVStore(gravityKey)
 		store.Set([]byte(tc.oldPrefixKey), tc.value)
 

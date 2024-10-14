@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,9 +24,9 @@ func TestHandleMsgSendToEth(t *testing.T) {
 		blockTime                        = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		blockHeight            int64     = 200
 		denom                            = "gravity0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
-		startingCoinAmount, _            = sdk.NewIntFromString("150000000000000000000") // 150 ETH worth, required to reach above u64 limit (which is about 18 ETH)
-		sendAmount, _                    = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
-		feeAmount, _                     = sdk.NewIntFromString("5000000000000000000")   // 5 ETH
+		startingCoinAmount, _            = math.NewIntFromString("150000000000000000000") // 150 ETH worth, required to reach above u64 limit (which is about 18 ETH)
+		sendAmount, _                    = math.NewIntFromString("50000000000000000000")  // 50 ETH
+		feeAmount, _                     = math.NewIntFromString("5000000000000000000")   // 5 ETH
 		startingCoins          sdk.Coins = sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}
 		sendingCoin            sdk.Coin  = sdk.NewCoin(denom, sendAmount)
 		feeCoin                sdk.Coin  = sdk.NewCoin(denom, feeAmount)
@@ -105,8 +106,8 @@ func TestMsgSendToCosmosClaim(t *testing.T) {
 		anyETHAddr       = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
 		tokenETHAddr     = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
 		myBlockTime      = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
-		amountA, _       = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
-		amountB, _       = sdk.NewIntFromString("100000000000000000000") // 100 ETH
+		amountA, _       = math.NewIntFromString("50000000000000000000")  // 50 ETH
+		amountB, _       = math.NewIntFromString("100000000000000000000") // 100 ETH
 	)
 	require.NoError(t, e1)
 	input, ctx := keeper.SetupFiveValChain(t)
@@ -210,7 +211,7 @@ func TestEthereumBlacklist(t *testing.T) {
 		tokenETHAddr     = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
 		denom            = "gravity0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
 		myBlockTime      = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
-		amountA, _       = sdk.NewIntFromString("50000000000000000000") // 50 ETH
+		amountA, _       = math.NewIntFromString("50000000000000000000") // 50 ETH
 	)
 	require.NoError(t, e1)
 	input, ctx := keeper.SetupFiveValChain(t)
@@ -272,8 +273,9 @@ func TestEthereumBlacklist(t *testing.T) {
 	assert.Equal(t, balance, sdk.Coins{})
 
 	// Check community pool has received the money instead of the address
-	community_pool_balance := input.DistKeeper.GetFeePool(ctx).CommunityPool
-	assert.Equal(t, sdk.NewDecFromInt(amountA), community_pool_balance.AmountOf(denom))
+	fp, _ := input.DistKeeper.FeePool.Get(ctx)
+	community_pool_balance := fp.CommunityPool
+	assert.Equal(t, math.LegacyNewDecFromInt(amountA), community_pool_balance.AmountOf(denom))
 
 }
 
@@ -320,12 +322,12 @@ func TestMsgSendToCosmosOverflow(t *testing.T) {
 
 	// Totally valid, but we're 101 away from the supply limit
 	almostTooMuch := types.ERC20Token{
-		Amount:   sdk.NewIntFromBigInt(grandeBigInt),
+		Amount:   math.NewIntFromBigInt(grandeBigInt),
 		Contract: tokenETHAddr1,
 	}
 	// This takes us past the supply limit of 2^256 - 1
 	exactlyTooMuch := types.ERC20Token{
-		Amount:   sdk.NewInt(101),
+		Amount:   math.NewInt(101),
 		Contract: tokenETHAddr1,
 	}
 	almostTooMuchClaim := types.MsgSendToCosmosClaim{
@@ -348,7 +350,7 @@ func TestMsgSendToCosmosOverflow(t *testing.T) {
 	}
 	// Absoulte max value of 2^256 - 1. Previous versions (v0.43 or v0.44) of cosmos-sdk did not support math.Int of this size
 	maxSend := types.ERC20Token{
-		Amount:   sdk.NewIntFromBigInt(biggestBigInt),
+		Amount:   math.NewIntFromBigInt(biggestBigInt),
 		Contract: tokenETHAddr2,
 	}
 	maxSendClaim := types.MsgSendToCosmosClaim{
@@ -368,7 +370,7 @@ func TestMsgSendToCosmosOverflow(t *testing.T) {
 
 	// Require that no tokens were bridged previously
 	preSupply1 := input.BankKeeper.GetSupply(ctx, denom1)
-	require.Equal(t, sdk.NewInt(0), preSupply1.Amount)
+	require.Equal(t, math.NewInt(0), preSupply1.Amount)
 
 	fmt.Println("<<<<START Expecting to see 'minted coins from module account		module=x/bank amount={2^256 - 101}'")
 	// Execute the 2^256 - 101 transaction
@@ -392,7 +394,7 @@ func TestMsgSendToCosmosOverflow(t *testing.T) {
 
 	// Require that no tokens were bridged previously
 	preSupply2 := input.BankKeeper.GetSupply(ctx, denom2)
-	require.Equal(t, sdk.NewInt(0), preSupply2.Amount)
+	require.Equal(t, math.NewInt(0), preSupply2.Amount)
 
 	fmt.Println("<<<<START Expecting to see 'minted coins from module account		module=x/bank amount={2^256 - 1}'")
 	// Execute the 2^256 - 1 transaction
@@ -421,7 +423,7 @@ func TestMsgSendToCosmosClaimSpreadVotes(t *testing.T) {
 	h := NewHandler(input.GravityKeeper)
 
 	myErc20 := types.ERC20Token{
-		Amount:   sdk.NewInt(12),
+		Amount:   math.NewInt(12),
 		Contract: tokenETHAddr,
 	}
 
@@ -509,7 +511,7 @@ func TestMsgSendToCosmosForeignPrefixedAddress(t *testing.T) {
 	h := NewHandler(k)
 
 	myErc20 := types.ERC20Token{
-		Amount:   sdk.NewInt(12),
+		Amount:   math.NewInt(12),
 		Contract: tokenETHAddr,
 	}
 
@@ -551,7 +553,7 @@ func TestMsgSendToCosmosForeignPrefixedAddress(t *testing.T) {
 	sendSendToCosmosClaim(nativeEthClaim, ctx, h, t)
 	EndBlocker(ctx, input.GravityKeeper)
 	nativeBals := input.BankKeeper.GetAllBalances(ctx, myForeignAddr)
-	expectedDoubleBalance := myErc20.Amount.Mul(sdk.NewInt(2))
+	expectedDoubleBalance := myErc20.Amount.Mul(math.NewInt(2))
 	require.Equal(t, nativeBals, sdk.NewCoins(sdk.NewCoin(erc20Denom, expectedDoubleBalance)))
 }
 
@@ -576,7 +578,9 @@ func TestMsgSetOrchestratorAddresses(t *testing.T) {
 	k := input.GravityKeeper
 	h := NewHandler(input.GravityKeeper)
 	ctx = ctx.WithBlockTime(blockTime)
-	valAddress, err := sdk.ValAddressFromBech32(input.StakingKeeper.GetValidators(ctx, 10)[0].OperatorAddress)
+	val, err := input.StakingKeeper.GetValidators(ctx, 10)
+	require.NoError(t, err)
+	valAddress, err := sdk.ValAddressFromBech32(val[0].OperatorAddress)
 	require.NoError(t, err)
 
 	// test setting keys

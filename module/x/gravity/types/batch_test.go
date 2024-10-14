@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/hex"
 	"testing"
+	
+	"cosmossdk.io/math"
 
 	_ "github.com/Gravity-Bridge/Gravity-Bridge/module/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,11 +33,11 @@ func TestOutgoingTxBatchCheckpointGold1(t *testing.T) {
 				Sender:      senderAddr.String(),
 				DestAddress: destAddress.GetAddress().Hex(),
 				Erc20Token: ERC20Token{
-					Amount:   sdk.NewInt(0x1),
+					Amount:   math.NewInt(0x1),
 					Contract: erc20Address.GetAddress().Hex(),
 				},
 				Erc20Fee: ERC20Token{
-					Amount:   sdk.NewInt(0x1),
+					Amount:   math.NewInt(0x1),
 					Contract: erc20Address.GetAddress().Hex(),
 				},
 			},
@@ -63,7 +65,7 @@ func TestOutgoingLogicCallCheckpointGold1(t *testing.T) {
 
 	token := []ERC20Token{{
 		Contract: "0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888",
-		Amount:   sdk.NewIntFromUint64(1),
+		Amount:   math.NewIntFromUint64(1),
 	}}
 	call := OutgoingLogicCall{
 		Transfers:            token,

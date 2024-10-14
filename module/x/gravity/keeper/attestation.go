@@ -8,12 +8,12 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	math "cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/store/prefix"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
 // TODO-JT: carefully look at atomicity of this function
@@ -27,7 +27,7 @@ func (k Keeper) Attest(
 		panic("Could not find ValAddr for delegate key, should be checked by now")
 	}
 	valAddr := val.GetOperator()
-	if err := sdk.VerifyAddressFormat(valAddr); err != nil {
+	if err := sdk.VerifyAddressFormat([]byte(valAddr)); err != nil {
 		return nil, errorsmod.Wrap(err, "invalid orchestrator validator address")
 	}
 	// Check that the nonce of this event is exactly one higher than the last nonce stored by this validator.
@@ -36,7 +36,7 @@ func (k Keeper) Attest(
 	// and prevents validators from submitting two claims with the same nonce.
 	// This prevents there being two attestations with the same nonce that get 2/3s of the votes
 	// in the endBlocker.
-	lastEventNonce := k.GetLastEventNonceByValidator(ctx, valAddr)
+	lastEventNonce := k.GetLastEventNonceByValidator(ctx, []byte(valAddr))
 	if claim.GetEventNonce() != lastEventNonce+1 {
 		return nil, fmt.Errorf(types.ErrNonContiguousEventNonce.Error(), lastEventNonce+1, claim.GetEventNonce())
 	}
@@ -66,10 +66,10 @@ func (k Keeper) Attest(
 	if ethClaim.GetEthBlockHeight() == claim.GetEthBlockHeight() {
 
 		// Add the validator's vote to this attestation
-		att.Votes = append(att.Votes, valAddr.String())
+		att.Votes = append(att.Votes, valAddr)
 
 		k.SetAttestation(ctx, claim.GetEventNonce(), hash, att)
-		k.SetLastEventNonceByValidator(ctx, valAddr, claim.GetEventNonce())
+		k.SetLastEventNonceByValidator(ctx, []byte(valAddr), claim.GetEventNonce())
 
 		return att, nil
 	} else {
@@ -94,17 +94,23 @@ func (k Keeper) TryAttestation(ctx sdk.Context, att *types.Attestation) {
 	if !att.Observed {
 		// Sum the current powers of all validators who have voted and see if it passes the current threshold
 		// TODO: The different integer types and math here needs a careful review
-		totalPower := k.StakingKeeper.GetLastTotalPower(ctx)
-		requiredPower := types.AttestationVotesPowerThreshold.Mul(totalPower).Quo(sdk.NewInt(100))
-		attestationPower := sdk.NewInt(0)
+		totalPower, err := k.StakingKeeper.GetLastTotalPower(ctx)
+		if err != nil {
+			panic(err)
+		}
+		requiredPower := types.AttestationVotesPowerThreshold.Mul(totalPower).Quo(math.NewInt(100))
+		attestationPower := math.NewInt(0)
 		for _, validator := range att.Votes {
 			val, err := sdk.ValAddressFromBech32(validator)
 			if err != nil {
 				panic(err)
 			}
-			validatorPower := k.StakingKeeper.GetLastValidatorPower(ctx, val)
+			validatorPower, err := k.StakingKeeper.GetLastValidatorPower(ctx, val)
+			if err != nil {
+				panic(err)
+			}
 			// Add it to the attestation power's sum
-			attestationPower = attestationPower.Add(sdk.NewInt(validatorPower))
+			attestationPower = attestationPower.Add(math.NewInt(validatorPower))
 			// If the power of all the validators that have voted on the attestation is higher or equal to the threshold,
 			// process the attestation, set Observed to true, and break
 			if attestationPower.GT(requiredPower) {

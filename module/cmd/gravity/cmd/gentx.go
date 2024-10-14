@@ -14,9 +14,9 @@ import (
 
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 
+	cfg "github.com/cometbft/cometbft/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	cfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -175,7 +175,7 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrap(err, "failed to validate validator account in genesis")
 			}
 
-			txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}
@@ -338,7 +338,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
 
-			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
+			genDoc, err := types.AppGenesisFromFile(config.GenesisFile())
 			if err != nil {
 				return errors.Wrap(err, "failed to read genesis doc from file")
 			}
@@ -405,7 +405,7 @@ func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.Ra
 
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.Codec, txEncodingConfig client.TxEncodingConfig,
-	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
+	config *cfg.Config, initCfg types.InitConfig, genDoc types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
@@ -425,7 +425,7 @@ func GenAppStateFromConfig(cdc codec.Codec, txEncodingConfig client.TxEncodingCo
 	}
 
 	// create the app state
-	appGenesisState, err := types.GenesisStateFromGenDoc(genDoc)
+	appGenesisState, err := types.GenesisStateFromAppGenesis(&genDoc)
 	if err != nil {
 		return appState, err
 	}
@@ -449,7 +449,7 @@ func GenAppStateFromConfig(cdc codec.Codec, txEncodingConfig client.TxEncodingCo
 // CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectTxs(cdc codec.Codec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
-	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
+	genDoc types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
@@ -469,7 +469,7 @@ func CollectTxs(cdc codec.Codec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir
 	genBalIterator.IterateGenesisBalances(
 		cdc, appState,
 		func(balance bankexported.GenesisBalance) (stop bool) {
-			balancesMap[balance.GetAddress().String()] = balance
+			balancesMap[balance.GetAddress()] = balance
 			return false
 		},
 	)
@@ -546,7 +546,7 @@ func CollectTxs(cdc codec.Codec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir
 		if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"insufficient fund for delegation %v: %v < %v",
-				delBal.GetAddress().String(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
+				delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
 			)
 		}
 

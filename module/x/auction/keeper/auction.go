@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -250,8 +251,12 @@ func (k Keeper) CloseAuctionWithWinner(ctx sdk.Context, auction_id uint64) error
 	burnWinningBids := k.GetParams(ctx).BurnWinningBids
 
 	highestBidAmount := auction.HighestBid.BidAmount
-	highestBidInt := sdk.NewIntFromUint64(highestBidAmount)
-	bidToken := k.MintKeeper.GetParams(ctx).MintDenom
+	highestBidInt := math.NewIntFromUint64(highestBidAmount)
+	params, err := k.MintKeeper.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	bidToken := params.MintDenom
 	highestBidCoin := sdk.NewCoin(bidToken, highestBidInt)
 	highestBidder := sdk.MustAccAddressFromBech32(auction.HighestBid.BidderAddress)
 

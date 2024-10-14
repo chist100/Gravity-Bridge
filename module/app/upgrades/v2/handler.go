@@ -3,6 +3,8 @@ package v2
 import (
 	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/math"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -12,9 +14,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	bech32ibckeeper "github.com/althea-net/bech32-ibc/x/bech32ibc/keeper"
 
 	gravitytypes "github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
 )
@@ -39,12 +38,12 @@ func GetMercury2Dot0UpgradeHandler() func(
 
 func GetV2UpgradeHandler(
 	mm *module.Manager, configurator *module.Configurator, accountKeeper *authkeeper.AccountKeeper,
-	bankKeeper *bankkeeper.BaseKeeper, bech32IbcKeeper *bech32ibckeeper.Keeper, distrKeeper *distrkeeper.Keeper,
+	bankKeeper *bankkeeper.BaseKeeper, distrKeeper *distrkeeper.Keeper,
 	mintKeeper *mintkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
 ) func(
 	ctx sdk.Context, plan upgradetypes.Plan, vmap module.VersionMap,
 ) (module.VersionMap, error) {
-	if mm == nil || configurator == nil || accountKeeper == nil || bankKeeper == nil || bech32IbcKeeper == nil ||
+	if mm == nil || configurator == nil || accountKeeper == nil || bankKeeper == nil ||
 		distrKeeper == nil || mintKeeper == nil || stakingKeeper == nil {
 		panic("Nil argument to GetV2UpgradeHandler")
 	}
@@ -61,15 +60,9 @@ func GetV2UpgradeHandler(
 		// Lower the gravity module version because we want to run that upgrade
 		fromVM[gravitytypes.StoreKey] = 1
 
-		ctx.Logger().Info("Mercury Upgrade: Setting up bech32ibc module's native prefix")
-		err := setupBech32ibcKeeper(bech32IbcKeeper, ctx)
-		if err != nil {
-			panic(errorsmod.Wrap(err, "Mercury Upgrade: Unable to upgrade, bech32ibc module not initialized"))
-		}
-
 		// distribution module: Fix the issues caused by an airdrop giving distribution module some tokens
 		ctx.Logger().Info("Mercury Upgrade: Fixing community pool balance")
-		err = fixDistributionPoolBalance(accountKeeper, bankKeeper, distrKeeper, mintKeeper, ctx)
+		err := fixDistributionPoolBalance(accountKeeper, bankKeeper, distrKeeper, mintKeeper, ctx)
 		if err != nil {
 			panic(errorsmod.Wrap(err, "Mercury Upgrade: Unable to upgrade, distribution module balance could not be corrected"))
 		}
@@ -82,12 +75,6 @@ func GetV2UpgradeHandler(
 	}
 }
 
-// Sets up bech32ibc module by setting the native account prefix to "gravity"
-// Failing to set the native prefix will cause a chain halt on init genesis or in the firstBeginBlocker assertions
-func setupBech32ibcKeeper(bech32IbcKeeper *bech32ibckeeper.Keeper, ctx sdk.Context) error {
-	return bech32IbcKeeper.SetNativeHrp(ctx, sdk.GetConfig().GetBech32AccountAddrPrefix())
-}
-
 // Fixes the invalid community pool balance caused by an airdrop airdropping to the distribution module account
 // causing the distribution invariant checking module balance == (pool balance + validator outstanding rewards) failure
 // We fix by overwriting the pool's ugraviton integer amount with the distribution module's integer amount less rewards
@@ -98,13 +85,21 @@ func fixDistributionPoolBalance(
 ) error {
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance(): Enter function, getting module account")
 	distrAcc := accountKeeper.GetModuleAccount(ctx, distrtypes.ModuleName).GetAddress()
-	ugraviton := mintKeeper.GetParams(ctx).MintDenom
+	params, err := mintKeeper.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	ugraviton := params.MintDenom
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance():", "distrAcc", distrAcc.String(), "chain-denom", ugraviton)
 
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance(): Obtaining distribution module and community pool balances")
 	distrBal := bankKeeper.GetBalance(ctx, distrAcc, ugraviton) // distr Int balance
 	distrBalCoins := sdk.NewCoins(distrBal)                     // distr Int balance as Coins
-	commPool := distrKeeper.GetFeePoolCommunityCoins(ctx)       // pool Dec balances
+	feePool, err := distrKeeper.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
+	commPool := feePool.CommunityPool     // pool Dec balances
 
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance():", "distrBal", distrBal.String(), "commPool", commPool.String())
 
@@ -180,10 +175,10 @@ func fixDistributionPoolBalance(
 	fixedPool := commPoolNoGrav.Add(distrBalLessRewards...)
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance():", "fixedPool", fixedPool.String())
 
-	feePool := distrtypes.FeePool{CommunityPool: fixedPool}
+	feePool = distrtypes.FeePool{CommunityPool: fixedPool}
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance():", "feePool", feePool.String())
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance(): Setting feePool on distribution keeper")
-	distrKeeper.SetFeePool(ctx, feePool)
+	distrKeeper.FeePool.Set(ctx, feePool)
 
 	// Check the invariants after our modifications
 	ctx.Logger().Info("Mercury Upgrade: fixDistributionPoolBalance(): Running distribution module invariants!")
@@ -204,11 +199,14 @@ func bumpMinValidatorCommissions(stakingKeeper *stakingkeeper.Keeper, ctx sdk.Co
 	// This logic was originally included in the Juno project at github.com/CosmosContracts/juno/blob/main/app/app.go
 	// This version was added to Juno by github user the-frey https://github.com/the-frey
 	ctx.Logger().Info("Mercury Upgrade: bumpMinValidatorCommissions(): Getting all the validators")
-	validators := stakingKeeper.GetAllValidators(ctx)
+	validators, err := stakingKeeper.GetAllValidators(ctx)
+	if err != nil {
+		panic(err)
+	}
 	// hard code this because we don't want
 	// a) a fork or
 	// b) immediate reaction with additional gov props
-	minCommissionRate := sdk.NewDecWithPrec(5, 2)
+	minCommissionRate := math.LegacyNewDecWithPrec(5, 2)
 	ctx.Logger().Info("Mercury Upgrade: bumpMinValidatorCommissions():", "minCommissionRate", minCommissionRate.String())
 	ctx.Logger().Info("Mercury Upgrade: bumpMinValidatorCommissions(): Iterating validators")
 	for _, v := range validators {
@@ -232,7 +230,7 @@ func bumpMinValidatorCommissions(stakingKeeper *stakingkeeper.Keeper, ctx sdk.Co
 			ctx.Logger().Info("Mercury Upgrade: bumpMinValidatorCommissions(): setting the validator")
 			stakingKeeper.SetValidator(ctx, v)
 
-			v, _ = stakingKeeper.GetValidator(ctx, v.GetOperator()) // Refresh since we set them in the keeper
+			v, _ = stakingKeeper.GetValidator(ctx, []byte(v.GetOperator())) // Refresh since we set them in the keeper
 			ctx.Logger().Info("Mercury Upgrade: bumpMinValidatorCommissions(): validator's set rate", "validator", v.GetMoniker(), "Commission", v.Commission.String())
 		}
 	}

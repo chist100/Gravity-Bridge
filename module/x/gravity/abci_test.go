@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,7 @@ func TestValsetCreationUponUnbonding(t *testing.T) {
 
 	input.Context = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	// begin unbonding
-	sMsgServer := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	sMsgServer := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
 	undelegateMsg := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[0], keeper.StakingAmount)
 	_, err := sMsgServer.Undelegate(input.Context, undelegateMsg)
 	require.NoError(t, err)
@@ -74,7 +75,7 @@ func TestValsetSlashing_ValsetCreated_Before_ValidatorBonded(t *testing.T) {
 	EndBlocker(ctx, pk)
 
 	// ensure that the  validator who is bonded after valset is created is not slashed
-	val := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
+	val, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
 	require.False(t, val.IsJailed())
 }
 
@@ -112,11 +113,11 @@ func TestValsetSlashing_ValsetCreated_After_ValidatorBonded(t *testing.T) {
 	EndBlocker(ctx, pk)
 
 	// ensure that the  validator who is bonded before valset is created is slashed
-	val := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
+	val, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
 	require.True(t, val.IsJailed())
 
 	// ensure that the  validator who attested the valset is not slashed.
-	val = input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
+	val, _ = input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
 	require.False(t, val.IsJailed())
 
 }
@@ -156,10 +157,10 @@ func TestNonValidatorValsetConfirm(t *testing.T) {
 	// Set the account in state
 	input.AccountKeeper.SetAccount(input.Context, acc)
 
-	sMsgServer := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	sMsgServer := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
 	_, err = sMsgServer.CreateValidator(
 		input.Context,
-		keeper.NewTestMsgCreateValidator(valAddr, consPubKey, sdk.NewIntFromUint64(1)),
+		keeper.NewTestMsgCreateValidator(valAddr, consPubKey, math.NewIntFromUint64(1)),
 	)
 	require.NoError(t, err)
 	// Run the staking endblocker to ensure valset is correct in state
@@ -204,7 +205,7 @@ func TestNonValidatorValsetConfirm(t *testing.T) {
 	// Now remove all the stake
 	_, err = sMsgServer.Undelegate(
 		input.Context,
-		keeper.NewTestMsgUnDelegateValidator(valAddr, sdk.NewIntFromUint64(1)),
+		keeper.NewTestMsgUnDelegateValidator(valAddr, math.NewIntFromUint64(1)),
 	)
 	require.NoError(t, err)
 
@@ -240,7 +241,7 @@ func TestValsetSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testing.T)
 	// Validator-1  Unbond slash window is not expired. if not attested, slash
 	// Validator-2  Unbond slash window is not expired. if attested, don't slash
 	input.Context = ctx.WithBlockHeight(valUnbondingHeight)
-	sMsgServer := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	sMsgServer := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
 	undelegateMsg1 := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[0], keeper.StakingAmount)
 	_, err := sMsgServer.Undelegate(input.Context, undelegateMsg1)
 	require.NoError(t, err)
@@ -265,11 +266,11 @@ func TestValsetSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testing.T)
 	EndBlocker(ctx, pk)
 
 	// Assertions
-	val1 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
+	val1, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
 	assert.True(t, val1.IsJailed())
 	// check if tokens are slashed for val1.
 
-	val2 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
+	val2, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
 	assert.True(t, val2.IsJailed())
 	// check if tokens shouldn't be slashed for val2.
 }
@@ -311,10 +312,10 @@ func TestNonValidatorBatchConfirm(t *testing.T) {
 	// Set the account in state
 	input.AccountKeeper.SetAccount(input.Context, acc)
 
-	sMsgServer := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	sMsgServer := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
 	_, err = sMsgServer.CreateValidator(
 		input.Context,
-		keeper.NewTestMsgCreateValidator(valAddr, consPubKey, sdk.NewIntFromUint64(1)),
+		keeper.NewTestMsgCreateValidator(valAddr, consPubKey, math.NewIntFromUint64(1)),
 	)
 	require.NoError(t, err)
 	// Run the staking endblocker to ensure valset is correct in state
@@ -368,7 +369,7 @@ func TestNonValidatorBatchConfirm(t *testing.T) {
 	// Now remove all the stake
 	_, err = sMsgServer.Undelegate(
 		input.Context,
-		keeper.NewTestMsgUnDelegateValidator(valAddr, sdk.NewIntFromUint64(1)),
+		keeper.NewTestMsgUnDelegateValidator(valAddr, math.NewIntFromUint64(1)),
 	)
 	require.NoError(t, err)
 
@@ -405,7 +406,7 @@ func TestBatchSlashing(t *testing.T) {
 		}
 		if i == 1 {
 			// don't sign with 2nd validator. set val bond height > batch block height
-			validator := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[i])
+			validator, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[i])
 			valConsAddr, err := validator.GetConsAddr()
 			require.NoError(t, err)
 			valSigningInfo := slashingtypes.ValidatorSigningInfo{
@@ -432,11 +433,11 @@ func TestBatchSlashing(t *testing.T) {
 	EndBlocker(ctx, pk)
 
 	// ensure that the  validator is jailed and slashed
-	val := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
+	val, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
 	require.True(t, val.IsJailed())
 
 	// ensure that the 2nd  validator is not jailed and slashed
-	val2 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
+	val2, _ := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
 	require.False(t, val2.IsJailed())
 
 	// Ensure that the last slashed valset nonce is set properly
@@ -493,7 +494,7 @@ func TestBatchTimeout(t *testing.T) {
 		mySender, e1        = sdk.AccAddressFromBech32("gravity1ahx7f8wyertuus9r20284ej0asrs085ceqtfnm")
 		myReceiver          = "0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7"
 		myTokenContractAddr = "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5" // Pickle
-		token, e2           = types.NewInternalERC20Token(sdk.NewInt(99999), myTokenContractAddr)
+		token, e2           = types.NewInternalERC20Token(math.NewInt(99999), myTokenContractAddr)
 		allVouchers         = sdk.NewCoins(token.GravityCoin())
 	)
 	require.NoError(t, e1)
@@ -514,10 +515,10 @@ func TestBatchTimeout(t *testing.T) {
 
 	// add some TX to the pool
 	for i, v := range []uint64{4, 3, 3, 4, 5, 6} {
-		amountToken, err := types.NewInternalERC20Token(sdk.NewInt(int64(i+100)), myTokenContractAddr)
+		amountToken, err := types.NewInternalERC20Token(math.NewInt(int64(i+100)), myTokenContractAddr)
 		require.NoError(t, err)
 		amount := amountToken.GravityCoin()
-		feeToken, err := types.NewInternalERC20Token(sdk.NewIntFromUint64(v), myTokenContractAddr)
+		feeToken, err := types.NewInternalERC20Token(math.NewIntFromUint64(v), myTokenContractAddr)
 		require.NoError(t, err)
 		fee := feeToken.GravityCoin()
 

@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -21,7 +22,7 @@ const (
 
 var (
 	// AttestationVotesPowerThreshold threshold of votes power to succeed
-	AttestationVotesPowerThreshold = sdk.NewInt(66)
+	AttestationVotesPowerThreshold = math.NewInt(66)
 
 	// ParamsStoreKeyGravityID stores the gravity id
 	ParamsStoreKeyGravityID = []byte("GravityID")
@@ -108,11 +109,11 @@ var (
 		TargetBatchTimeout:           0,
 		AverageBlockTime:             0,
 		AverageEthereumBlockTime:     0,
-		SlashFractionValset:          sdk.Dec{},
-		SlashFractionBatch:           sdk.Dec{},
-		SlashFractionLogicCall:       sdk.Dec{},
+		SlashFractionValset:          math.LegacyDec{},
+		SlashFractionBatch:           math.LegacyDec{},
+		SlashFractionLogicCall:       math.LegacyDec{},
 		UnbondSlashingValsetsWindow:  0,
-		SlashFractionBadEthSignature: sdk.Dec{},
+		SlashFractionBadEthSignature: math.LegacyDec{},
 		ValsetReward: sdk.Coin{
 			Denom:  "",
 			Amount: math.Int{},
@@ -120,7 +121,7 @@ var (
 		BridgeActive:                true,
 		EthereumBlacklist:           []string{},
 		MinChainFeeBasisPoints:      0,
-		ChainFeeAuctionPoolFraction: sdk.Dec{},
+		ChainFeeAuctionPoolFraction: math.LegacyDec{},
 	}
 )
 
@@ -166,16 +167,16 @@ func DefaultParams() *Params {
 		TargetBatchTimeout:           43200000,
 		AverageBlockTime:             5000,
 		AverageEthereumBlockTime:     15000,
-		SlashFractionValset:          sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		SlashFractionBatch:           sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		SlashFractionLogicCall:       sdk.NewDec(1).Quo(sdk.NewDec(1000)),
+		SlashFractionValset:          math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
+		SlashFractionBatch:           math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
+		SlashFractionLogicCall:       math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
 		UnbondSlashingValsetsWindow:  10000,
-		SlashFractionBadEthSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		ValsetReward:                 sdk.Coin{Denom: "", Amount: sdk.ZeroInt()},
+		SlashFractionBadEthSignature: math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
+		ValsetReward:                 sdk.Coin{Denom: "", Amount: math.ZeroInt()},
 		BridgeActive:                 true,
 		EthereumBlacklist:            []string{},
 		MinChainFeeBasisPoints:       2,
-		ChainFeeAuctionPoolFraction:  sdk.NewDecWithPrec(50, 2), // 50%, the prec parameter moves the decimal to the left that many places
+		ChainFeeAuctionPoolFraction:  math.LegacyNewDecWithPrec(50, 2), // 50%, the prec parameter moves the decimal to the left that many places
 	}
 }
 
@@ -257,16 +258,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 		TargetBatchTimeout:           0,
 		AverageBlockTime:             0,
 		AverageEthereumBlockTime:     0,
-		SlashFractionValset:          sdk.Dec{},
-		SlashFractionBatch:           sdk.Dec{},
-		SlashFractionLogicCall:       sdk.Dec{},
+		SlashFractionValset:          math.LegacyDec{},
+		SlashFractionBatch:           math.LegacyDec{},
+		SlashFractionLogicCall:       math.LegacyDec{},
 		UnbondSlashingValsetsWindow:  0,
-		SlashFractionBadEthSignature: sdk.Dec{},
+		SlashFractionBadEthSignature: math.LegacyDec{},
 		ValsetReward:                 sdk.Coin{Denom: "", Amount: math.Int{}},
 		BridgeActive:                 false,
 		EthereumBlacklist:            []string{},
 		MinChainFeeBasisPoints:       0,
-		ChainFeeAuctionPoolFraction:  sdk.Dec{},
+		ChainFeeAuctionPoolFraction:  math.LegacyDec{},
 	})
 }
 
@@ -392,7 +393,7 @@ func validateUnbondSlashingValsetsWindow(i interface{}) error {
 
 func validateSlashFractionValset(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
-	if _, ok := i.(sdk.Dec); !ok {
+	if _, ok := i.(math.LegacyDec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
@@ -416,7 +417,7 @@ func validateSignedLogicCallsWindow(i interface{}) error {
 
 func validateSlashFractionBatch(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
-	if _, ok := i.(sdk.Dec); !ok {
+	if _, ok := i.(math.LegacyDec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
@@ -424,7 +425,7 @@ func validateSlashFractionBatch(i interface{}) error {
 
 func validateSlashFractionLogicCall(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
-	if _, ok := i.(sdk.Dec); !ok {
+	if _, ok := i.(math.LegacyDec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
@@ -432,7 +433,7 @@ func validateSlashFractionLogicCall(i interface{}) error {
 
 func validateSlashFractionBadEthSignature(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
-	if _, ok := i.(sdk.Dec); !ok {
+	if _, ok := i.(math.LegacyDec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
@@ -480,7 +481,7 @@ func validateMinChainFeeBasisPoints(i interface{}) error {
 }
 
 func validateChainFeeAuctionPoolFraction(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -491,7 +492,7 @@ func validateChainFeeAuctionPoolFraction(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("chain fee auction pool fraction must be non-negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("chain fee auction pool fraction too large: %s", v)
 	}
 

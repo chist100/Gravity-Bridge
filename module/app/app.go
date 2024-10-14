@@ -14,12 +14,21 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	// Cosmos SDK
 
+	"cosmossdk.io/store/streaming"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/evidence"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/upgrade"
+	upgradeclient "cosmossdk.io/x/upgrade/client"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -30,9 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store/streaming"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -61,9 +67,6 @@ import (
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -89,32 +92,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	// Cosmos IBC-Go
-	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
-	icahost "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	transfer "github.com/cosmos/ibc-go/v6/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v6/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v6/modules/core/02-client"
-	ibcclientclient "github.com/cosmos/ibc-go/v6/modules/core/02-client/client"
-	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-
-	// Osmosis-Labs Bech32-IBC
-	"github.com/althea-net/bech32-ibc/x/bech32ibc"
-	bech32ibckeeper "github.com/althea-net/bech32-ibc/x/bech32ibc/keeper"
-	bech32ibctypes "github.com/althea-net/bech32-ibc/x/bech32ibc/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client"
+	ibcclientclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -178,7 +172,6 @@ var (
 		vesting.AppModuleBasic{},
 		gravity.AppModuleBasic{},
 		auction.AppModuleBasic{},
-		bech32ibc.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		groupmodule.AppModuleBasic{},
 	)
@@ -205,7 +198,6 @@ var (
 	}
 
 	// verify app interface at compile time
-	_ simapp.App              = (*Gravity)(nil)
 	_ servertypes.Application = (*Gravity)(nil)
 
 	// enable checks that run on the first BeginBlocker execution after an upgrade/genesis init/node restart
@@ -257,7 +249,6 @@ type Gravity struct {
 	IbcTransferKeeper *ibctransferkeeper.Keeper
 	GravityKeeper     *keeper.Keeper
 	AuctionKeeper     *auckeeper.Keeper
-	Bech32IbcKeeper   *bech32ibckeeper.Keeper
 	IcaHostKeeper     *icahostkeeper.Keeper
 	GroupKeeper       *groupkeeper.Keeper
 
@@ -335,9 +326,6 @@ func (app Gravity) ValidateMembers() {
 	if app.AuctionKeeper == nil {
 		panic("Nil auctionKeeper!")
 	}
-	if app.Bech32IbcKeeper == nil {
-		panic("Nil bech32IbcKeeper!")
-	}
 	if app.IcaHostKeeper == nil {
 		panic("Nil icaHostKeeper!")
 	}
@@ -391,7 +379,7 @@ func NewGravityApp(
 		slashingtypes.StoreKey, govtypes.StoreKey, paramstypes.StoreKey,
 		ibchost.StoreKey, upgradetypes.StoreKey, evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gravitytypes.StoreKey, auctiontypes.StoreKey, bech32ibctypes.StoreKey,
+		gravitytypes.StoreKey, auctiontypes.StoreKey,
 		icahosttypes.StoreKey, group.StoreKey,
 	)
 	tKeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -522,12 +510,6 @@ func NewGravityApp(
 	)
 	app.IbcTransferKeeper = &ibcTransferKeeper
 
-	bech32IbcKeeper := *bech32ibckeeper.NewKeeper(
-		ibcKeeper.ChannelKeeper, appCodec, keys[bech32ibctypes.StoreKey],
-		ibcTransferKeeper,
-	)
-	app.Bech32IbcKeeper = &bech32IbcKeeper
-
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		ibcKeeper.ChannelKeeper, ibcKeeper.ChannelKeeper, &ibcKeeper.PortKeeper,
@@ -567,7 +549,6 @@ func NewGravityApp(
 		&distrKeeper,
 		&accountKeeper,
 		&ibcTransferKeeper,
-		&bech32IbcKeeper,
 		&auctionKeeper,
 	)
 	app.GravityKeeper = &gravityKeeper
@@ -595,8 +576,7 @@ func NewGravityApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(distrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(upgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(ibcKeeper.ClientKeeper)).
-		AddRoute(gravitytypes.RouterKey, keeper.NewGravityProposalHandler(gravityKeeper)).
-		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*app.Bech32IbcKeeper))
+		AddRoute(gravitytypes.RouterKey, keeper.NewGravityProposalHandler(gravityKeeper))
 
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
@@ -722,10 +702,6 @@ func NewGravityApp(
 			bankKeeper,
 			accountKeeper,
 		),
-		bech32ibc.NewAppModule(
-			appCodec,
-			bech32IbcKeeper,
-		),
 		icaAppModule,
 		groupmodule.NewAppModule(appCodec, groupKeeper, accountKeeper, bankKeeper, interfaceRegistry),
 	)
@@ -746,7 +722,6 @@ func NewGravityApp(
 		authtypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		bech32ibctypes.ModuleName,
 		gravitytypes.ModuleName,
 		auctiontypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -774,7 +749,6 @@ func NewGravityApp(
 		authtypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		bech32ibctypes.ModuleName,
 		genutiltypes.ModuleName,
 		authz.ModuleName,
 		paramstypes.ModuleName,
@@ -795,7 +769,6 @@ func NewGravityApp(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		authz.ModuleName,
-		bech32ibctypes.ModuleName, // Must go before gravity so that pending ibc auto forwards can be restored
 		gravitytypes.ModuleName,
 		auctiontypes.ModuleName, // Must go after bank module to verify balances
 		crisistypes.ModuleName,
@@ -885,9 +858,6 @@ func (app *Gravity) setPostHandler() {
 	app.SetPostHandler(postHandler)
 }
 
-// MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
 func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
@@ -909,7 +879,6 @@ func (app *Gravity) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // Perform necessary checks at the start of this node's first BeginBlocker execution
 // Note: This should ONLY be called once, it should be called at the top of BeginBlocker guarded by firstBlock
 func (app *Gravity) firstBeginBlocker(ctx sdk.Context) {
-	app.assertBech32PrefixMatches(ctx)
 	app.assertNativeTokenMatchesConstant(ctx)
 	app.assertNativeTokenIsNonAuctionable(ctx)
 }
@@ -921,7 +890,7 @@ func (app *Gravity) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 // InitChainer application update at chain initialization
 func (app *Gravity) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	var genesisState simapp.GenesisState
+	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
@@ -1053,7 +1022,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 // Registers handlers for all our upgrades
 func (app *Gravity) registerUpgradeHandlers() {
 	upgrades.RegisterUpgradeHandlers(
-		app.mm, app.configurator, app.AccountKeeper, app.BankKeeper, app.Bech32IbcKeeper, app.DistrKeeper,
+		app.mm, app.configurator, app.AccountKeeper, app.BankKeeper, app.DistrKeeper,
 		app.MintKeeper, app.StakingKeeper, app.UpgradeKeeper, app.CrisisKeeper, app.IbcTransferKeeper, app.AuctionKeeper,
 	)
 }
@@ -1077,9 +1046,8 @@ func (app *Gravity) registerStoreLoaders() {
 	// v1->v2 STORE LOADER SETUP
 	// Register the new v2 modules and the special StoreLoader to add them
 	if upgradeInfo.Name == v2.V1ToV2PlanName {
-		// Register the bech32ibc module as a new module that needs a new store allocated
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added:   []string{bech32ibctypes.ModuleName},
+			Added:   []string{},
 			Renamed: nil,
 			Deleted: nil,
 		}

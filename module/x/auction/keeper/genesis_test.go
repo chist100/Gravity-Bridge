@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/config"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/keeper"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
@@ -41,7 +42,7 @@ func (suite *KeeperTestSuite) TestInvalidGenesis() {
 	// Test import and export
 
 	nonAuctionable := TestDenom1
-	nonAuctionableCoin := sdk.NewCoin(nonAuctionable, sdk.NewInt(100))
+	nonAuctionableCoin := sdk.NewCoin(nonAuctionable, math.NewInt(100))
 
 	genesis := types.GenesisState{
 		Params: types.DefaultParams(),

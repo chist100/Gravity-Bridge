@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
@@ -78,7 +79,11 @@ func pruneAttestationsAfterNonce(ctx sdk.Context, k Keeper, nonceCutoff uint64) 
 
 	// Discover all affected validators whose LastEventNonce must be reset to nonceCutoff
 
-	numValidators := len(k.StakingKeeper.GetBondedValidatorsByPower(ctx))
+	valList, err := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		panic(err)
+	}
+	numValidators := len(valList)
 	// void and setMember are necessary for sets to work
 	type void struct{}
 	var setMember void
@@ -127,12 +132,16 @@ func (k Keeper) HandleAirdropProposal(ctx sdk.Context, p *types.AirdropProposal)
 		return errorsmod.Wrap(types.ErrInvalid, "Invalid airdrop denom")
 	}
 
-	feePool := k.DistKeeper.GetFeePool(ctx)
+	feePool, err := k.DistKeeper.FeePool.Get(ctx)
+	if err!=nil {
+		ctx.Logger().Info("Airdrop failed to execute invalid denom!")
+		return errorsmod.Wrap(types.ErrInvalid, "Invalid airdrop denom")
+	}
 	feePoolAmount := feePool.CommunityPool.AmountOf(p.Denom)
 
-	airdropTotal := sdk.NewInt(0)
+	airdropTotal := math.NewInt(0)
 	for _, v := range p.Amounts {
-		airdropTotal = airdropTotal.Add(sdk.NewIntFromUint64(v))
+		airdropTotal = airdropTotal.Add(math.NewIntFromUint64(v))
 	}
 
 	totalRequiredDecCoin := sdk.NewDecCoinFromCoin(sdk.NewCoin(p.Denom, airdropTotal))
@@ -168,11 +177,11 @@ func (k Keeper) HandleAirdropProposal(ctx sdk.Context, p *types.AirdropProposal)
 	}
 
 	// the total amount actually sent in dec coins
-	totalSent := sdk.NewDec(0)
+	totalSent := math.LegacyNewDec(0)
 	for i, addr := range parsedRecipients {
 		usersAmount := p.Amounts[i]
-		usersIntAmount := sdk.NewIntFromUint64(usersAmount)
-		usersDecAmount := sdk.NewDecFromInt(usersIntAmount)
+		usersIntAmount := math.NewIntFromUint64(usersAmount)
+		usersDecAmount := math.LegacyNewDecFromInt(usersIntAmount)
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, disttypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(p.Denom, usersIntAmount)))
 		// if there is no error we add to the total actually sent
 		if err == nil {
@@ -197,7 +206,7 @@ func (k Keeper) HandleAirdropProposal(ctx sdk.Context, p *types.AirdropProposal)
 		return errorsmod.Wrap(types.ErrInvalid, "internal error!")
 	}
 	feePool.CommunityPool = newCoins
-	k.DistKeeper.SetFeePool(ctx, feePool)
+	k.DistKeeper.FeePool.Set(ctx, feePool)
 
 	endingSupply := k.bankKeeper.GetSupply(ctx, p.Denom)
 	if !startingSupply.Equal(endingSupply) {

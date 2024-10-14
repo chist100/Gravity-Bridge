@@ -16,14 +16,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/store/prefix"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
-	bech32ibctypes "github.com/althea-net/bech32-ibc/x/bech32ibc/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 )
 
 // ValidatePendingIbcAutoForward performs basic validation, asserts the nonce is not ahead of what gravity is aware of,
@@ -38,19 +36,19 @@ func (k Keeper) ValidatePendingIbcAutoForward(ctx sdk.Context, forward types.Pen
 	if forward.EventNonce > latestEventNonce {
 		return errorsmod.Wrap(types.ErrInvalid, "EventNonce must be <= latest observed event nonce")
 	}
-	prefix, _, err := bech32.DecodeAndConvert(forward.ForeignReceiver)
-	if err != nil { // Covered by ValidateBasic, but check anyway to avoid linter issues
-		return errorsmod.Wrapf(err, "ForeignReceiver %s is not a valid bech32 address", forward.ForeignReceiver)
-	}
-	hrpRecord, err := k.bech32IbcKeeper.GetHrpIbcRecord(ctx, prefix)
-	if err != nil {
-		return errorsmod.Wrapf(bech32ibctypes.ErrInvalidHRP, "ForeignReciever %s has an invalid or unregistered prefix", forward.ForeignReceiver)
-	}
-	if forward.IbcChannel != hrpRecord.SourceChannel {
-		return errorsmod.Wrapf(types.ErrMismatched, "IbcChannel %s does not match the registered prefix's IBC channel %v",
-			forward.IbcChannel, hrpRecord.String(),
-		)
-	}
+	// prefix, _, err := bech32.DecodeAndConvert(forward.ForeignReceiver)
+	// if err != nil { // Covered by ValidateBasic, but check anyway to avoid linter issues
+	// 	return errorsmod.Wrapf(err, "ForeignReceiver %s is not a valid bech32 address", forward.ForeignReceiver)
+	// }
+	// hrpRecord, err := k.bech32IbcKeeper.GetHrpIbcRecord(ctx, prefix)
+	// if err != nil {
+	// 	return errorsmod.Wrapf(bech32ibctypes.ErrInvalidHRP, "ForeignReciever %s has an invalid or unregistered prefix", forward.ForeignReceiver)
+	// }
+	// if forward.IbcChannel != hrpRecord.SourceChannel {
+	// 	return errorsmod.Wrapf(types.ErrMismatched, "IbcChannel %s does not match the registered prefix's IBC channel %v",
+	// 		forward.IbcChannel, hrpRecord.String(),
+	// 	)
+	// }
 	modAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName).GetAddress()
 	modBal := k.bankKeeper.GetBalance(ctx, modAcc, forward.Token.Denom)
 	if modBal.IsLT(*forward.Token) {

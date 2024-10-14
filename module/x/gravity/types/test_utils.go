@@ -54,6 +54,6 @@ func NonzeroSdkInt() (ret math.Int) {
 		}
 		amount = big.NewInt(0).SetBytes(amountBz)
 	}
-	ret = sdk.NewIntFromBigInt(amount)
+	ret = math.NewIntFromBigInt(amount)
 	return
 }

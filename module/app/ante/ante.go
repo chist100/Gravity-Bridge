@@ -3,14 +3,14 @@ package ante
 import (
 	"fmt"
 
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	ethermintante "github.com/evmos/ethermint/app/ante"
 
@@ -56,7 +56,7 @@ func NewAnteHandler(
 		sdkante.NewValidateSigCountDecorator(accountKeeper),
 		sdkante.NewSigGasConsumeDecorator(accountKeeper, options.SigGasConsumer),
 		// Delegates to EIP-712 verification OR to regular SDK verification depending on the extension option
-		NewGravitySigVerificationDecorator(cdc, accountKeeper, options.SignModeHandler, evmChainID),
+		NewGravitySigVerificationDecorator(cdc, accountKeeper,  *options.SignModeHandler, evmChainID),
 		sdkante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewRedundantRelayDecorator(ibcKeeper),
 		// Enforces the minimum commission for Gravity Prop #1
