@@ -287,7 +287,7 @@ func (k Keeper) filterAndIterateUnbatchedTransactions(ctx sdk.Context, prefixKey
 // grant if created right now. This info is both presented to relayers for the purpose of determining when to request
 // batches and also used by the batch creation process to decide not to create a new batch (fees must be increasing)
 func (k Keeper) GetBatchFeeByTokenType(ctx sdk.Context, tokenContractAddr types.EthAddress, maxElements uint) *types.BatchFees {
-	batchFee := types.BatchFees{Token: tokenContractAddr.GetAddress().Hex(), TotalFees: math.NewInt(0), TxCount: 0}
+	batchFee := types.BatchFees{Token: tokenContractAddr.GetAddress().Hex(), TotalFees: sdk.IntProto{Int: math.NewInt(0)}, TxCount: 0}
 
 	// Since transactions are stored with keys [ prefix | contract | fee_amount] and since this iterator returns results
 	// in DESC order, we can safely pick the first N and have a batch with maximal fees for relaying
@@ -297,7 +297,7 @@ func (k Keeper) GetBatchFeeByTokenType(ctx sdk.Context, tokenContractAddr types.
 			if fee.Contract.GetAddress() != tokenContractAddr.GetAddress() {
 				panic(fmt.Errorf("unexpected fee contract %s under key %v when getting batch fees for contract %s", fee.Contract.GetAddress().Hex(), key, tokenContractAddr.GetAddress().Hex()))
 			}
-			batchFee.TotalFees = batchFee.TotalFees.Add(fee.Amount)
+			batchFee.TotalFees.Int = batchFee.TotalFees.Int.Add(fee.Amount)
 			batchFee.TxCount += 1
 			return batchFee.TxCount == uint64(maxElements)
 		} else {
@@ -338,14 +338,14 @@ func (k Keeper) createBatchFees(ctx sdk.Context, maxElements uint) map[string]ty
 
 		if fees, ok := batchFeesMap[feeAddrStr.Hex()]; ok {
 			if fees.TxCount < uint64(maxElements) {
-				fees.TotalFees = batchFeesMap[feeAddrStr.Hex()].TotalFees.Add(tx.Erc20Fee.Amount)
+				fees.TotalFees.Int = batchFeesMap[feeAddrStr.Hex()].TotalFees.Int.Add(tx.Erc20Fee.Amount)
 				fees.TxCount++
 				batchFeesMap[feeAddrStr.Hex()] = fees
 			}
 		} else {
 			batchFeesMap[feeAddrStr.Hex()] = types.BatchFees{
 				Token:     feeAddrStr.Hex(),
-				TotalFees: tx.Erc20Fee.Amount,
+				TotalFees: sdk.IntProto{Int: tx.Erc20Fee.Amount},
 				TxCount:   1,
 			}
 		}

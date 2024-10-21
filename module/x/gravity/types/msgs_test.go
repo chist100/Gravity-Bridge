@@ -100,7 +100,7 @@ func TestMsgSendToCosmosClaimHash(t *testing.T) {
 		EventNonce:     0,
 		EthBlockHeight: 0,
 		TokenContract:  "",
-		Amount:         math.Int{},
+		Amount:         sdk.IntProto{Int: math.Int{}},
 		EthereumSender: "",
 		CosmosReceiver: "",
 		Orchestrator:   "",
@@ -115,7 +115,7 @@ func TestMsgSendToCosmosClaimHash(t *testing.T) {
 	mCtr := base
 	mCtr.TokenContract = NonemptyEthAddress()
 	mAmt := base
-	mAmt.Amount = NonzeroSdkInt()
+	mAmt.Amount = sdk.IntProto{Int: NonzeroSdkInt()}
 	mSend := base
 	mSend.EthereumSender = NonemptyEthAddress()
 	mRecv := base

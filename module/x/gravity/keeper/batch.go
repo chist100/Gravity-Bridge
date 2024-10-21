@@ -48,7 +48,7 @@ func (k Keeper) BuildOutgoingTXBatch(
 		}
 
 		lastFees := lastBatch.ToExternal().GetFees()
-		if lastFees.GTE(currentFees.TotalFees) {
+		if lastFees.GTE(currentFees.TotalFees.Int) {
 			return nil, errorsmod.Wrap(types.ErrInvalid, "new batch would not be more profitable")
 		}
 	}

@@ -6,8 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "cosmossdk.io/store/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -17,7 +17,7 @@ import (
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
 func (app *Gravity) ExportAppStateAndValidators(
-	forZeroHeight bool, jailWhiteList []string,
+	forZeroHeight bool, jailWhiteList []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 
 	ctx := app.NewContext(true)
@@ -28,7 +28,7 @@ func (app *Gravity) ExportAppStateAndValidators(
 		app.prepForZeroHeightGenesis(ctx, jailWhiteList)
 	}
 
-	genState, err := app.mm.ExportGenesis(ctx, app.AppCodec)
+	genState, err := app.ModuleManager.ExportGenesisForModules(ctx, app.AppCodec, modulesToExport)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}

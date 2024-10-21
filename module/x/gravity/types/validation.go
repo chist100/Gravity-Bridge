@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/math"
 	mathmod "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -213,7 +214,12 @@ func NewValset(nonce, height uint64, members InternalBridgeValidators, rewardAmo
 	for _, val := range members {
 		mem = append(mem, val.ToExternal())
 	}
-	vs := Valset{Nonce: uint64(nonce), Members: mem, Height: height, RewardAmount: rewardAmount, RewardToken: rewardToken.GetAddress().Hex()}
+	vs := Valset{
+		Nonce:        uint64(nonce),
+		Members:      mem,
+		Height:       height,
+		RewardAmount: types.IntProto{rewardAmount},
+		RewardToken:  rewardToken.GetAddress().Hex()}
 	return &vs,
 		nil
 }
@@ -243,11 +249,11 @@ func (v Valset) GetCheckpoint(gravityIDstring string) []byte {
 	}
 	rewardToken := gethcommon.HexToAddress(v.RewardToken)
 
-	if v.RewardAmount.BigInt() == nil {
+	if v.RewardAmount.Int.BigInt() == nil {
 		// this must be programmer error
 		panic("Invalid reward amount passed in valset GetCheckpoint!")
 	}
-	rewardAmount := v.RewardAmount.BigInt()
+	rewardAmount := v.RewardAmount.Int.BigInt()
 
 	checkpointBytes := []uint8("checkpoint")
 	var checkpoint [32]uint8
@@ -286,7 +292,7 @@ func (v *Valset) WithoutEmptyMembers() *Valset {
 		Nonce:        v.Nonce,
 		Members:      make([]BridgeValidator, 0, len(v.Members)),
 		Height:       0,
-		RewardAmount: mathmod.Int{},
+		RewardAmount: types.IntProto{Int: mathmod.Int{}},
 		RewardToken:  "",
 	}
 	for i := range v.Members {
@@ -307,7 +313,7 @@ func (v Valset) Equal(o Valset) (bool, error) {
 		return false, errorsmod.Wrap(ErrInvalid, "valset nonces mismatch")
 	}
 
-	if !v.RewardAmount.Equal(o.RewardAmount) {
+	if !v.RewardAmount.Int.Equal(o.RewardAmount.Int) {
 		return false, errorsmod.Wrap(ErrInvalid, "valset reward amounts mismatch")
 	}
 
@@ -334,11 +340,11 @@ func (v Valset) ValidateBasic() error {
 			return err
 		}
 	}
-	if v.RewardAmount.IsNegative() {
+	if v.RewardAmount.Int.IsNegative() {
 		return errorsmod.Wrap(ErrInvalidValset, "valset reward must not be negative")
 	}
 	cleanToken := strings.TrimSpace(v.RewardToken)
-	if v.RewardAmount.IsPositive() && cleanToken == "" {
+	if v.RewardAmount.Int.IsPositive() && cleanToken == "" {
 		return errorsmod.Wrap(ErrInvalidValset, "no valset reward denom for nonzero reward")
 	}
 	if cleanToken != v.RewardToken {

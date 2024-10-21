@@ -15,13 +15,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 
+	tmconfig "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/types"
+	tmproto "github.com/cometbft/cometbft/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/spf13/cobra"
-	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -334,9 +334,8 @@ func initGenFiles(
 		InitialHeight: 0,
 		ConsensusParams: &tmproto.ConsensusParams{
 			Block: tmproto.BlockParams{
-				MaxBytes:   0,
-				MaxGas:     0,
-				TimeIotaMs: 0,
+				MaxBytes: 0,
+				MaxGas:   0,
 			},
 			Evidence: tmproto.EvidenceParams{
 				MaxAgeNumBlocks: 0,
@@ -347,7 +346,7 @@ func initGenFiles(
 				PubKeyTypes: []string{},
 			},
 			Version: tmproto.VersionParams{
-				AppVersion: 0,
+				App: 0,
 			},
 		},
 		Validators: nil,
@@ -384,12 +383,12 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		appGen, err := genutiltypes.AppGenesisFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, appGen, genBalIterator, genutiltypes.DefaultMessageValidator, nil)
 		if err != nil {
 			return err
 		}

@@ -109,11 +109,11 @@ var (
 		TargetBatchTimeout:           0,
 		AverageBlockTime:             0,
 		AverageEthereumBlockTime:     0,
-		SlashFractionValset:          math.LegacyDec{},
-		SlashFractionBatch:           math.LegacyDec{},
-		SlashFractionLogicCall:       math.LegacyDec{},
+		SlashFractionValset:          sdk.DecProto{Dec: math.LegacyDec{}},
+		SlashFractionBatch:           sdk.DecProto{Dec: math.LegacyDec{}},
+		SlashFractionLogicCall:       sdk.DecProto{Dec: math.LegacyDec{}},
 		UnbondSlashingValsetsWindow:  0,
-		SlashFractionBadEthSignature: math.LegacyDec{},
+		SlashFractionBadEthSignature: sdk.DecProto{Dec: math.LegacyDec{}},
 		ValsetReward: sdk.Coin{
 			Denom:  "",
 			Amount: math.Int{},
@@ -121,7 +121,7 @@ var (
 		BridgeActive:                true,
 		EthereumBlacklist:           []string{},
 		MinChainFeeBasisPoints:      0,
-		ChainFeeAuctionPoolFraction: math.LegacyDec{},
+		ChainFeeAuctionPoolFraction: sdk.DecProto{Dec: math.LegacyDec{}},
 	}
 )
 
@@ -167,16 +167,16 @@ func DefaultParams() *Params {
 		TargetBatchTimeout:           43200000,
 		AverageBlockTime:             5000,
 		AverageEthereumBlockTime:     15000,
-		SlashFractionValset:          math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
-		SlashFractionBatch:           math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
-		SlashFractionLogicCall:       math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
+		SlashFractionValset:          sdk.DecProto{math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000))},
+		SlashFractionBatch:           sdk.DecProto{Dec: math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000))},
+		SlashFractionLogicCall:       sdk.DecProto{Dec: math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000))},
 		UnbondSlashingValsetsWindow:  10000,
-		SlashFractionBadEthSignature: math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000)),
+		SlashFractionBadEthSignature: sdk.DecProto{Dec: math.LegacyNewDec(1).Quo(math.LegacyNewDec(1000))},
 		ValsetReward:                 sdk.Coin{Denom: "", Amount: math.ZeroInt()},
 		BridgeActive:                 true,
 		EthereumBlacklist:            []string{},
 		MinChainFeeBasisPoints:       2,
-		ChainFeeAuctionPoolFraction:  math.LegacyNewDecWithPrec(50, 2), // 50%, the prec parameter moves the decimal to the left that many places
+		ChainFeeAuctionPoolFraction:  sdk.DecProto{Dec: math.LegacyNewDecWithPrec(50, 2)}, // 50%, the prec parameter moves the decimal to the left that many places
 	}
 }
 
@@ -258,16 +258,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 		TargetBatchTimeout:           0,
 		AverageBlockTime:             0,
 		AverageEthereumBlockTime:     0,
-		SlashFractionValset:          math.LegacyDec{},
-		SlashFractionBatch:           math.LegacyDec{},
-		SlashFractionLogicCall:       math.LegacyDec{},
+		SlashFractionValset:          sdk.DecProto{Dec: math.LegacyDec{}},
+		SlashFractionBatch:           sdk.DecProto{Dec: math.LegacyDec{}},
+		SlashFractionLogicCall:       sdk.DecProto{Dec: math.LegacyDec{}},
 		UnbondSlashingValsetsWindow:  0,
-		SlashFractionBadEthSignature: math.LegacyDec{},
+		SlashFractionBadEthSignature: sdk.DecProto{Dec: math.LegacyDec{}},
 		ValsetReward:                 sdk.Coin{Denom: "", Amount: math.Int{}},
 		BridgeActive:                 false,
 		EthereumBlacklist:            []string{},
 		MinChainFeeBasisPoints:       0,
-		ChainFeeAuctionPoolFraction:  math.LegacyDec{},
+		ChainFeeAuctionPoolFraction:  sdk.DecProto{Dec: math.LegacyDec{}},
 	})
 }
 

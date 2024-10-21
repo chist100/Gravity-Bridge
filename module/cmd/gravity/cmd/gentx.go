@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/pkg/errors"
@@ -196,7 +197,8 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
+			// TODO make it  address.Codec beter
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()))
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}

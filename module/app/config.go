@@ -76,3 +76,81 @@ func NewConfigFromFlags() simulation.Config {
 		BlockMaxGas:        0,
 	}
 }
+
+
+
+	// var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+// app..SetOrderBeginBlockers(
+// 	upgradetypes.ModuleName,
+// 	capabilitytypes.ModuleName,
+// 	minttypes.ModuleName,
+// 	distrtypes.ModuleName,
+// 	slashingtypes.ModuleName,
+// 	evidencetypes.ModuleName,
+// 	stakingtypes.ModuleName,
+// 	banktypes.ModuleName,
+// 	crisistypes.ModuleName,
+// 	authtypes.ModuleName,
+// 	vestingtypes.ModuleName,
+// 	ibctransfertypes.ModuleName,
+// 	gravitytypes.ModuleName,
+// 	auctiontypes.ModuleName,
+// 	genutiltypes.ModuleName,
+// 	authz.ModuleName,
+// 	govtypes.ModuleName,
+// 	paramstypes.ModuleName,
+// 	icatypes.ModuleName,
+// 	group.ModuleName,
+// )
+// mm.SetOrderEndBlockers(
+// 	crisistypes.ModuleName,
+// 	govtypes.ModuleName,
+// 	stakingtypes.ModuleName,
+// 	icatypes.ModuleName,
+// 	gravitytypes.ModuleName,
+// 	auctiontypes.ModuleName,
+// 	upgradetypes.ModuleName,
+// 	capabilitytypes.ModuleName,
+// 	minttypes.ModuleName,
+// 	distrtypes.ModuleName,
+// 	slashingtypes.ModuleName,
+// 	evidencetypes.ModuleName,
+// 	ibchost.ModuleName,
+// 	banktypes.ModuleName,
+// 	authtypes.ModuleName,
+// 	vestingtypes.ModuleName,
+// 	ibctransfertypes.ModuleName,
+// 	genutiltypes.ModuleName,
+// 	authz.ModuleName,
+// 	paramstypes.ModuleName,
+// 	group.ModuleName,
+// )
+// mm.SetOrderInitGenesis(
+// 	capabilitytypes.ModuleName,
+// 	authtypes.ModuleName,
+// 	banktypes.ModuleName,
+// 	distrtypes.ModuleName,
+// 	stakingtypes.ModuleName,
+// 	slashingtypes.ModuleName,
+// 	govtypes.ModuleName,
+// 	minttypes.ModuleName,
+// 	upgradetypes.ModuleName,
+// 	ibchost.ModuleName,
+// 	genutiltypes.ModuleName,
+// 	evidencetypes.ModuleName,
+// 	ibctransfertypes.ModuleName,
+// 	authz.ModuleName,
+// 	gravitytypes.ModuleName,
+// 	auctiontypes.ModuleName, // Must go after bank module to verify balances
+// 	crisistypes.ModuleName,
+// 	vestingtypes.ModuleName,
+// 	paramstypes.ModuleName,
+// 	icatypes.ModuleName,
+// 	group.ModuleName,
+// )
+
+// mm.RegisterInvariants(&crisisKeeper)
+// mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+// configurator := module.NewConfigurator(app.AppCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+// app.configurator = &configurator
+// mm.RegisterServices(*app.configurator)

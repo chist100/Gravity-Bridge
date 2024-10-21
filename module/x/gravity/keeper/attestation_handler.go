@@ -129,7 +129,7 @@ func (a AttestationHandler) handleSendToCosmos(ctx sdk.Context, claim types.MsgS
 
 	// Check if coin is Cosmos-originated asset and get denom
 	isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, *tokenAddress)
-	coin := sdk.NewCoin(denom, claim.Amount)
+	coin := sdk.NewCoin(denom, claim.Amount.Int)
 	coins := sdk.Coins{coin}
 
 	moduleAddr := a.keeper.accountKeeper.GetModuleAddress(types.ModuleName)
@@ -149,7 +149,7 @@ func (a AttestationHandler) handleSendToCosmos(ctx sdk.Context, claim types.MsgS
 		if err != nil || ibcForwardQueued { // ibc forward enqueue and errors should not send tokens to anyone
 			a.assertNothingSent(ctx, moduleAddr, preSendBalance, denom)
 		} else { // No error, local send -> assert send had right amount
-			a.assertSentAmount(ctx, moduleAddr, preSendBalance, denom, claim.Amount)
+			a.assertSentAmount(ctx, moduleAddr, preSendBalance, denom, claim.Amount.Int)
 		}
 
 		if err != nil { // trigger send to community pool
@@ -334,7 +334,7 @@ func (a AttestationHandler) handleValsetUpdated(ctx sdk.Context, claim types.Msg
 	// is valid then some reward was issued by this validator set
 	// and we need to either add to the total tokens for a Cosmos native
 	// token, or burn non cosmos native tokens
-	if claim.RewardAmount.GT(math.ZeroInt()) && claim.RewardToken != types.ZeroAddressString {
+	if claim.RewardAmount.Int.GT(math.ZeroInt()) && claim.RewardToken != types.ZeroAddressString {
 		// Check if coin is Cosmos-originated asset and get denom
 		isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, *rewardAddress)
 		if isCosmosOriginated {
@@ -352,7 +352,7 @@ func (a AttestationHandler) handleValsetUpdated(ctx sdk.Context, claim types.Msg
 			//
 			// Note we are minting based on the claim! This is important as the reward value
 			// could change between when this event occurred and the present
-			coins := sdk.Coins{sdk.NewCoin(denom, claim.RewardAmount)}
+			coins := sdk.Coins{sdk.NewCoin(denom, claim.RewardAmount.Int)}
 			if err := a.keeper.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
 				if err := ctx.EventManager().EmitTypedEvent(
 					&types.EventValsetUpdatedClaim{
@@ -415,7 +415,7 @@ func (a AttestationHandler) mintEthereumOriginatedVouchers(
 	preMintBalance := a.keeper.bankKeeper.GetBalance(ctx, moduleAddr, coin.Denom)
 	// Ensure that users are not bridging an impossible amount, only 2^256 - 1 tokens can exist on ethereum
 	prevSupply := a.keeper.bankKeeper.GetSupply(ctx, coin.Denom)
-	newSupply := new(big.Int).Add(prevSupply.Amount.BigInt(), claim.Amount.BigInt())
+	newSupply := new(big.Int).Add(prevSupply.Amount.BigInt(), claim.Amount.Int.BigInt())
 	if newSupply.BitLen() > 256 { // new supply overflows uint256
 		a.keeper.logger(ctx).Error("Deposit Overflow",
 			"claim type", claim.GetType(),
@@ -444,7 +444,7 @@ func (a AttestationHandler) mintEthereumOriginatedVouchers(
 	}
 
 	postMintBalance := a.keeper.bankKeeper.GetBalance(ctx, moduleAddr, coin.Denom)
-	if !postMintBalance.Sub(preMintBalance).Amount.Equal(claim.Amount) {
+	if !postMintBalance.Sub(preMintBalance).Amount.Equal(claim.Amount.Int) {
 		panic(fmt.Sprintf(
 			"Somehow minted incorrect amount! Previous balance %v Post-mint balance %v claim amount %v",
 			preMintBalance.String(), postMintBalance.String(), claim.Amount.String()),

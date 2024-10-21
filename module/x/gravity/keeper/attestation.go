@@ -393,7 +393,7 @@ func (k Keeper) GetLastObservedValset(ctx sdk.Context) *types.Valset {
 		Nonce:        0,
 		Members:      []types.BridgeValidator{},
 		Height:       0,
-		RewardAmount: math.Int{},
+		RewardAmount: sdk.IntProto{Int: math.Int{}},
 		RewardToken:  "",
 	}
 	k.cdc.MustUnmarshal(bytes, &valset)

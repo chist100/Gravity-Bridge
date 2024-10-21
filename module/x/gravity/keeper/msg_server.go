@@ -200,7 +200,7 @@ func (k msgServer) checkAndDeductSendToEthFees(ctx sdk.Context, sender sdk.AccAd
 		var stakerFee math.Int
 		if chainFeeAuctionable {
 			// Determine the pool's share by first multiplying the total with the [0,1] fraction param, ignoring any dust
-			poolFee := params.ChainFeeAuctionPoolFraction.Mul(math.LegacyNewDecFromInt(chainFee.Amount)).TruncateInt()
+			poolFee := params.ChainFeeAuctionPoolFraction.Dec.Mul(math.LegacyNewDecFromInt(chainFee.Amount)).TruncateInt()
 			// Then the stakers will receive the remainder
 			stakerFee = chainFee.Amount.Sub(poolFee)
 
